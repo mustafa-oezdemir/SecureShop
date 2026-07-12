@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SecureShop.Api.Data;
 using SecureShop.Api.Data.Seed;
@@ -19,56 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
-builder.Services
-    .AddIdentity<ApplicationUser, ApplicationRole>(options =>
-    {
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequiredLength = 12;
-        options.Password.RequiredUniqueChars = 4;
-
-        options.Lockout.AllowedForNewUsers = true;
-        options.Lockout.DefaultLockoutTimeSpan =
-            TimeSpan.FromMinutes(15);
-        options.Lockout.MaxFailedAccessAttempts = 5;
-
-        options.User.RequireUniqueEmail = true;
-
-        options.SignIn.RequireConfirmedAccount = true;
-    })
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.Name = "__Host-SecureShop.Api.Auth";
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.Path = "/";
-    options.Cookie.IsEssential = true;
-
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
-    options.SlidingExpiration = true;
-
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode =
-            StatusCodes.Status401Unauthorized;
-
-        return Task.CompletedTask;
-    };
-
-    options.Events.OnRedirectToAccessDenied = context =>
-    {
-        context.Response.StatusCode =
-            StatusCodes.Status403Forbidden;
-
-        return Task.CompletedTask;
-    };
-});
+builder.Services.AddSecureShopIdentity();
 
 builder.Services.AddAuthorization(options =>
 {
