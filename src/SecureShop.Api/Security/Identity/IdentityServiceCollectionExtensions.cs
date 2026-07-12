@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using SecureShop.Api.Data;
+using SecureShop.Api.Security.Identity.Tokens;
 
 namespace SecureShop.Api.Security.Identity;
 
@@ -20,6 +21,9 @@ public static class IdentityServiceCollectionExtensions
     private static readonly TimeSpan SecurityStampValidationInterval =
         TimeSpan.FromMinutes(5);
 
+    private static readonly TimeSpan PasswordResetTokenLifetime =
+        TimeSpan.FromHours(1);
+
     public static IServiceCollection AddSecureShopIdentity(
         this IServiceCollection services)
     {
@@ -28,7 +32,13 @@ public static class IdentityServiceCollectionExtensions
         services
             .AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<
+                EmailConfirmationTokenProvider<ApplicationUser>>(
+                AppTokenProviders.EmailConfirmation);
+
+        services.AddOptions<
+            EmailConfirmationTokenProviderOptions>();
 
         services.Configure<IdentityOptions>(options =>
         {
@@ -37,6 +47,7 @@ public static class IdentityServiceCollectionExtensions
             ConfigureLockout(options);
             ConfigureSignIn(options);
             ConfigureUser(options);
+            ConfigureTokens(options);
         });
 
         services.Configure<PasswordHasherOptions>(options =>
@@ -53,6 +64,13 @@ public static class IdentityServiceCollectionExtensions
             options.ValidationInterval =
                 SecurityStampValidationInterval;
         });
+
+        services.Configure<DataProtectionTokenProviderOptions>(
+            options =>
+            {
+                options.TokenLifespan =
+                    PasswordResetTokenLifetime;
+            });
 
         services.ConfigureApplicationCookie(options =>
         {
@@ -151,5 +169,15 @@ public static class IdentityServiceCollectionExtensions
             "0123456789-._@+";
 
         options.User.RequireUniqueEmail = true;
+    }
+
+    private static void ConfigureTokens(
+        IdentityOptions options)
+    {
+        options.Tokens.EmailConfirmationTokenProvider =
+            AppTokenProviders.EmailConfirmation;
+
+        options.Tokens.PasswordResetTokenProvider =
+            TokenOptions.DefaultProvider;
     }
 }

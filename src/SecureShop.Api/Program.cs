@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using SecureShop.Api.Data;
 using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
+using SecureShop.Api.Features.Auth.TwoFactor;
 using SecureShop.Api.Security.Identity;
 using SecureShop.Api.Security.Policies;
+using SecureShop.Api.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddSecureShopIdentity();
+
+builder.Services.AddSecureShopEmail(
+    builder.Configuration);
+
+builder.Services.AddSecureShopTwoFactor(
+    builder.Configuration);
 
 builder.Services.AddAuthorization(options =>
 {
