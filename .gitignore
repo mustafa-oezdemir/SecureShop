@@ -1,4 +1,5 @@
-﻿# .NET build outputs
+﻿
+# .NET build outputs
 [Bb]in/
 [Oo]bj/
 artifacts/
@@ -97,3 +98,5 @@ PublishProfiles/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+todo.md
