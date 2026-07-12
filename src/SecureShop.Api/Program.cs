@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SecureShop.Api.Data;
 using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
+using SecureShop.Api.Features.Auth.External;
 using SecureShop.Api.Features.Auth.TwoFactor;
 using SecureShop.Api.Security.Identity;
 using SecureShop.Api.Security.Policies;
@@ -21,6 +22,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddSecureShopIdentity();
+
+builder.Services.AddSecureShopGoogleAuthentication(
+    builder.Configuration);
 
 builder.Services.AddSecureShopEmail(
     builder.Configuration);
