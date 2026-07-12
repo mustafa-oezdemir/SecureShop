@@ -1,0 +1,6 @@
+@SecureShop.Api_HostAddress = http://localhost:5001
+
+GET {{SecureShop.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
