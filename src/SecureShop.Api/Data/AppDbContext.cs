@@ -7,9 +7,18 @@ using SecureShop.Api.Security.Identity;
 namespace SecureShop.Api.Data;
 
 public sealed class AppDbContext
-    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+    : IdentityDbContext<
+        ApplicationUser,
+        ApplicationRole,
+        Guid,
+        IdentityUserClaim<Guid>,
+        ApplicationUserRole,
+        IdentityUserLogin<Guid>,
+        IdentityRoleClaim<Guid>,
+        IdentityUserToken<Guid>>
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options)
         : base(options)
     {
     }
@@ -18,7 +27,8 @@ public sealed class AppDbContext
 
     public DbSet<Product> Products => Set<Product>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 

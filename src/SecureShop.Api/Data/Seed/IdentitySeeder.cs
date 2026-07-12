@@ -6,14 +6,33 @@ namespace SecureShop.Api.Data.Seed;
 
 public sealed class IdentitySeeder
 {
-    private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+    private static readonly IReadOnlyCollection<RoleSeedDefinition>
+        RoleDefinitions =
+        [
+            new(
+                AppRoles.Admin,
+                "Sistem yönetimi ve tüm yönetim işlemleri.",
+                true),
+
+            new(
+                AppRoles.Employee,
+                "Ürün, stok ve operasyon işlemlerini yönetir.",
+                true),
+
+            new(
+                AppRoles.Kunde,
+                "Müşteri alışveriş, sepet ve sipariş işlemleri.",
+                true)
+        ];
+
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
     private readonly ILogger<IdentitySeeder> _logger;
 
     public IdentitySeeder(
-        RoleManager<IdentityRole<Guid>> roleManager,
+        RoleManager<ApplicationRole> roleManager,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
         IHostEnvironment environment,
@@ -50,23 +69,49 @@ public sealed class IdentitySeeder
 
     private async Task EnsureRolesAsync()
     {
-        foreach (var roleName in AppRoles.All)
+        foreach (var definition in RoleDefinitions)
         {
-            if (await _roleManager.RoleExistsAsync(roleName))
+            var role = await _roleManager.FindByNameAsync(
+                definition.Name);
+
+            if (role is null)
+            {
+                role = new ApplicationRole(
+                    definition.Name,
+                    definition.Description,
+                    definition.IsSystem);
+
+                var createResult = await _roleManager.CreateAsync(role);
+
+                ThrowIfFailed(
+                    createResult,
+                    $"Role '{definition.Name}' could not be created.");
+
+                _logger.LogInformation(
+                    "Identity role created: {RoleName}",
+                    definition.Name);
+
+                continue;
+            }
+
+            var wasChanged = role.SetMetadata(
+                definition.Description,
+                definition.IsSystem);
+
+            if (!wasChanged)
             {
                 continue;
             }
 
-            var result = await _roleManager.CreateAsync(
-                new IdentityRole<Guid>(roleName));
+            var updateResult = await _roleManager.UpdateAsync(role);
 
             ThrowIfFailed(
-                result,
-                $"Role '{roleName}' could not be created.");
+                updateResult,
+                $"Role '{definition.Name}' could not be updated.");
 
             _logger.LogInformation(
-                "Identity role created: {RoleName}",
-                roleName);
+                "Identity role updated: {RoleName}",
+                definition.Name);
         }
     }
 
@@ -178,4 +223,9 @@ public sealed class IdentitySeeder
         throw new InvalidOperationException(
             $"{message} {errors}");
     }
+
+    private sealed record RoleSeedDefinition(
+        string Name,
+        string Description,
+        bool IsSystem);
 }

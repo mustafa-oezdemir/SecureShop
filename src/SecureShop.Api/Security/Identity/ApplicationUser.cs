@@ -45,10 +45,22 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     [PersonalData]
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
-    public void SetProfile(string firstName, string lastName)
+    public ICollection<ApplicationUserRole> UserRoles { get; private set; } =
+        new List<ApplicationUserRole>();
+
+    public void SetProfile(
+        string firstName,
+        string lastName)
     {
-        FirstName = NormalizeName(firstName, nameof(firstName), "Ad");
-        LastName = NormalizeName(lastName, nameof(lastName), "Soyad");
+        FirstName = NormalizeName(
+            firstName,
+            nameof(firstName),
+            "Ad");
+
+        LastName = NormalizeName(
+            lastName,
+            nameof(lastName),
+            "Soyad");
     }
 
     public void Activate()
@@ -66,7 +78,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>
         string parameterName,
         string displayName)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(
+            value,
+            parameterName);
 
         var normalizedValue = value.Trim();
 
