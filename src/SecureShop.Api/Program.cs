@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using SecureShop.Api.Configuration;
 using SecureShop.Api.Data;
 using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
@@ -10,6 +11,10 @@ using SecureShop.Api.Security.Policies;
 using SecureShop.Api.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
+
+DotEnvConfiguration.AddMissingFromDotEnv(
+    builder.Configuration,
+    builder.Environment.ContentRootPath);
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
