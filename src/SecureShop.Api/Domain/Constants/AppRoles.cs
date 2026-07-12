@@ -8,7 +8,7 @@ public static class AppRoles
 
     public const string Kunde = "Kunde";
 
-    public static IReadOnlyList<string> All { get; } =
+    public static IReadOnlyCollection<string> All { get; } =
     [
         Admin,
         Employee,
