@@ -1,16 +1,112 @@
 @model SecureShop.Mvc.Models.Responses.ProductResponse
-@{ ViewData["Title"] = Model.Name; }
+@{
+    ViewData["Title"] = Model.Name;
+    var images = Model.Images
+        .OrderBy(image => image.SortOrder)
+        .ToList();
+    var activeImage = images.FirstOrDefault(image => image.IsPrimary)
+        ?? images.FirstOrDefault();
+}
 
-<article class="card">
-    <div class="card-body">
-        <span class="badge bg-secondary">@Model.CategoryName</span>
-        <h1 class="mt-2">@Model.Name</h1>
-        <p class="text-muted">SKU: @Model.Sku</p>
-        <p>@(Model.Description ?? "Bu ürün için açıklama bulunmuyor.")</p>
-        <dl class="row">
-            <dt class="col-sm-3">Fiyat</dt><dd class="col-sm-9">@Model.Price.ToString("N2") €</dd>
-            <dt class="col-sm-3">Stok</dt><dd class="col-sm-9">@Model.StockQuantity</dd>
-        </dl>
-        <a asp-action="Index" class="btn btn-outline-secondary">Ürünlere dön</a>
+<article class="card border-0 shadow-sm product-detail-card">
+    <div class="card-body p-3 p-lg-5">
+        <div class="row g-4 g-xl-5">
+            <div class="col-lg-7">
+                @if (activeImage is not null)
+                {
+                    <section class="product-gallery"
+                             data-product-gallery
+                             aria-label="@Model.Name ürün fotoğrafları">
+                        <div class="product-gallery-thumbnails"
+                             role="tablist"
+                             aria-label="Ürün fotoğrafı seçin">
+                            @foreach (var image in images)
+                            {
+                                var isActive = image.Id == activeImage.Id;
+
+                                <button type="button"
+                                        class="product-gallery-thumbnail @(isActive ? "is-active" : null)"
+                                        data-gallery-thumbnail
+                                        data-image-url="@image.ImageUrl"
+                                        data-image-alt="@image.AltText"
+                                        role="tab"
+                                        aria-selected="@(isActive ? "true" : "false")"
+                                        aria-label="@image.AltText">
+                                    <img src="@image.ImageUrl"
+                                         alt=""
+                                         loading="lazy" />
+                                </button>
+                            }
+                        </div>
+
+                        <div class="product-gallery-stage">
+                            <img src="@activeImage.ImageUrl"
+                                 alt="@activeImage.AltText"
+                                 class="product-gallery-main-image"
+                                 data-gallery-main-image />
+                        </div>
+                    </section>
+                }
+                else
+                {
+                    <div class="product-gallery-empty">
+                        Bu ürün için henüz fotoğraf bulunmuyor.
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-5">
+                <span class="badge rounded-pill text-bg-light border">@Model.CategoryName</span>
+                <h1 class="display-6 fw-semibold mt-3">@Model.Name</h1>
+                <p class="text-body-secondary">SKU: @Model.Sku</p>
+                <p class="lead product-detail-description">
+                    @(Model.Description ?? "Bu ürün için açıklama bulunmuyor.")
+                </p>
+
+                <div class="product-detail-price">@Model.Price.ToString("N2") €</div>
+
+                @if (Model.StockQuantity > 0)
+                {
+                    <div class="text-success fw-semibold mb-4">
+                        Stokta — @Model.StockQuantity adet
+                    </div>
+                }
+                else
+                {
+                    <div class="text-danger fw-semibold mb-4">Stokta yok</div>
+                }
+
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Ürünlere dön</a>
+
+                    @if (User.IsInRole(AppRoles.Customer) && Model.StockQuantity > 0)
+                    {
+                        <form asp-controller="Cart"
+                              asp-action="Add"
+                              method="post"
+                              class="d-flex gap-2 align-items-end">
+                            <input type="hidden" name="ProductId" value="@Model.Id" />
+                            <div>
+                                <label for="cart-quantity" class="form-label mb-1">Adet</label>
+                                <input id="cart-quantity"
+                                       name="Quantity"
+                                       type="number"
+                                       min="1"
+                                       max="@Math.Min(Model.StockQuantity, 99)"
+                                       value="1"
+                                       class="form-control cart-quantity-input" />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Sepete ekle</button>
+                        </form>
+                    }
+                    else if (User.Identity?.IsAuthenticated != true)
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                            Sepete eklemek için giriş yap
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </article>

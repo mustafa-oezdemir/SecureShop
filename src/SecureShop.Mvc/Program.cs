@@ -111,6 +111,34 @@ builder.Services
     })
     .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
+builder.Services
+    .AddHttpClient<ICartApiService, CartApiService>(
+        (serviceProvider, client) =>
+        {
+            var apiSettings = serviceProvider
+                .GetRequiredService<IOptions<ApiSettings>>()
+                .Value;
+
+            client.BaseAddress = new Uri(
+                $"{apiSettings.BaseUrl.TrimEnd('/')}/",
+                UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(
+                    "application/json"));
+        })
+    .ConfigurePrimaryHttpMessageHandler(
+        () => new SocketsHttpHandler
+        {
+            UseCookies = false,
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip
+                | DecompressionMethods.Deflate
+                | DecompressionMethods.Brotli
+        })
+    .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

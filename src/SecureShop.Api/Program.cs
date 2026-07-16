@@ -7,7 +7,9 @@ using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
 using SecureShop.Api.Features.Auth.External;
 using SecureShop.Api.Features.Auth.TwoFactor;
+using SecureShop.Api.Features.Cart;
 using SecureShop.Api.Features.Products;
+using SecureShop.Api.Security;
 using SecureShop.Api.Security.Identity;
 using SecureShop.Api.Security.Policies;
 using SecureShop.Api.Services.Email;
@@ -77,8 +79,12 @@ builder.Services.AddAuthorization(options =>
         });
 });
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IdentitySeeder>();
+builder.Services.AddScoped<CatalogSeeder>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddControllers();
 builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
@@ -101,6 +107,11 @@ if (app.Environment.IsDevelopment())
         scope.ServiceProvider.GetRequiredService<IdentitySeeder>();
 
     await identitySeeder.SeedAsync();
+
+    var catalogSeeder =
+        scope.ServiceProvider.GetRequiredService<CatalogSeeder>();
+
+    await catalogSeeder.SeedAsync();
 }
 else
 {

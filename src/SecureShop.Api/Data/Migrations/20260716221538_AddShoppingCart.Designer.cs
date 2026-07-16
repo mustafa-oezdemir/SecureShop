@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SecureShop.Api.Data;
 
@@ -11,9 +12,11 @@ using SecureShop.Api.Data;
 namespace SecureShop.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260716221538_AddShoppingCart")]
+    partial class AddShoppingCart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -286,54 +289,6 @@ namespace SecureShop.Api.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SecureShop.Api.Domain.Entities.ProductImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AltText")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasPrecision(0)
-                        .HasColumnType("datetimeoffset(0)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<bool>("IsPrimary")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId")
-                        .IsUnique()
-                        .HasDatabaseName("UX_ProductImages_ProductId_Primary")
-                        .HasFilter("[IsPrimary] = 1");
-
-                    b.HasIndex("ProductId", "SortOrder")
-                        .IsUnique()
-                        .HasDatabaseName("UX_ProductImages_ProductId_SortOrder");
-
-                    b.ToTable("ProductImages", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_ProductImages_SortOrder_Range", "[SortOrder] BETWEEN 0 AND 99");
-                        });
-                });
-
             modelBuilder.Entity("SecureShop.Api.Security.Identity.ApplicationRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -560,17 +515,6 @@ namespace SecureShop.Api.Data.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("SecureShop.Api.Domain.Entities.ProductImage", b =>
-                {
-                    b.HasOne("SecureShop.Api.Domain.Entities.Product", "Product")
-                        .WithMany("Images")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("SecureShop.Api.Security.Identity.ApplicationUserRole", b =>
                 {
                     b.HasOne("SecureShop.Api.Security.Identity.ApplicationRole", "Role")
@@ -598,11 +542,6 @@ namespace SecureShop.Api.Data.Migrations
             modelBuilder.Entity("SecureShop.Api.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("SecureShop.Api.Domain.Entities.Product", b =>
-                {
-                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("SecureShop.Api.Security.Identity.ApplicationRole", b =>

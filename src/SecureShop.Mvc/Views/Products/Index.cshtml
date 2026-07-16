@@ -16,8 +16,22 @@ else
     <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (var product in Model.Products)
         {
+            var primaryImage = product.Images
+                .OrderBy(image => image.SortOrder)
+                .FirstOrDefault(image => image.IsPrimary)
+                ?? product.Images.OrderBy(image => image.SortOrder).FirstOrDefault();
+
             <div class="col">
-                <article class="card h-100">
+                <article class="card h-100 border-0 shadow-sm product-card">
+                    @if (primaryImage is not null)
+                    {
+                        <a asp-action="Details" asp-route-id="@product.Id" class="product-card-image-link">
+                            <img src="@primaryImage.ImageUrl"
+                                 alt="@primaryImage.AltText"
+                                 class="card-img-top product-card-image"
+                                 loading="lazy" />
+                        </a>
+                    }
                     <div class="card-body">
                         <span class="badge bg-secondary">@product.CategoryName</span>
                         <h2 class="h5 mt-2">@product.Name</h2>

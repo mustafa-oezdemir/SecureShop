@@ -10,6 +10,7 @@ public sealed record ProductResponse(
     decimal Price,
     int StockQuantity,
     bool IsActive,
+    IReadOnlyList<ProductImageResponse> Images,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? UpdatedAtUtc,
     string RowVersion);

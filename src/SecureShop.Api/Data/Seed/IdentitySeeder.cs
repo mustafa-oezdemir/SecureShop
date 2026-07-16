@@ -65,6 +65,12 @@ public sealed class IdentitySeeder
             roleName: AppRoles.Employee,
             defaultFirstName: "Development",
             defaultLastName: "Employee");
+
+        await EnsureDevelopmentUserAsync(
+            sectionName: "SeedUsers:Customer",
+            roleName: AppRoles.Kunde,
+            defaultFirstName: "Development",
+            defaultLastName: "Customer");
     }
 
     private async Task EnsureRolesAsync()

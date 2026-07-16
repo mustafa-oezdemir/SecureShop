@@ -168,6 +168,7 @@ public sealed class ProductService : IProductService
 
         var products = await query
             .Include(product => product.Category)
+            .Include(product => product.Images)
             .OrderBy(product => product.Name)
             .ToListAsync(cancellationToken);
 
@@ -187,6 +188,7 @@ public sealed class ProductService : IProductService
 
         var product = await query
             .Include(item => item.Category)
+            .Include(item => item.Images)
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         return product is null ? null : Map(product);
@@ -252,6 +254,15 @@ public sealed class ProductService : IProductService
             product.Price,
             product.StockQuantity,
             product.IsActive,
+            product.Images
+                .OrderBy(image => image.SortOrder)
+                .Select(image => new ProductImageResponse(
+                    image.Id,
+                    image.ImageUrl,
+                    image.AltText,
+                    image.SortOrder,
+                    image.IsPrimary))
+                .ToList(),
             product.CreatedAtUtc,
             product.UpdatedAtUtc,
             Convert.ToBase64String(product.RowVersion));

@@ -80,6 +80,13 @@ public sealed class AccountController : Controller
         return View(viewModel);
     }
 
+    [AllowAnonymous]
+    [HttpGet("forbidden")]
+    public IActionResult Forbidden()
+    {
+        return View();
+    }
+
     [Authorize]
     [HttpPost("logout")]
     [ValidateAntiForgeryToken]

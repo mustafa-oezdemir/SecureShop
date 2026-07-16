@@ -27,6 +27,12 @@ public sealed class AppDbContext
 
     public DbSet<Product> Products => Set<Product>();
 
+    public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+
+    public DbSet<Cart> Carts => Set<Cart>();
+
+    public DbSet<CartItem> CartItems => Set<CartItem>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

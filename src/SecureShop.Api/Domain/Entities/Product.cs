@@ -58,6 +58,37 @@ public sealed class Product
 
     public Category Category { get; private set; } = null!;
 
+    public ICollection<ProductImage> Images { get; private set; } =
+        new List<ProductImage>();
+
+    public void AddImage(
+        string imageUrl,
+        string altText,
+        int sortOrder,
+        bool isPrimary = false)
+    {
+        if (Images.Any(image => image.SortOrder == sortOrder))
+        {
+            throw new InvalidOperationException(
+                "Aynı görsel sırası bir ürün içinde tekrar kullanılamaz.");
+        }
+
+        if (isPrimary && Images.Any(image => image.IsPrimary))
+        {
+            throw new InvalidOperationException(
+                "Bir ürünün yalnızca bir ana görseli olabilir.");
+        }
+
+        Images.Add(new ProductImage(
+            Id,
+            imageUrl,
+            altText,
+            sortOrder,
+            isPrimary));
+
+        MarkAsUpdated();
+    }
+
     public void SetName(string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
