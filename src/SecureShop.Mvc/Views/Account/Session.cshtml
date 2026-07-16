@@ -1,0 +1,101 @@
+@model SecureShop.Mvc.Models.ViewModels.AuthSessionViewModel
+
+@{
+    ViewData["Title"] = "Oturum Denetimi";
+}
+
+<div class="container py-4">
+    <h1 class="mb-4">Oturum Denetimi</h1>
+
+    <section class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">MVC Authentication Durumu</h2>
+
+            @if (Model.MvcIsAuthenticated)
+            {
+                <p class="mb-2">
+                    MVC ortak authentication cookie'sini doğruladı.
+                </p>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Authenticated</dt>
+                    <dd class="col-sm-8">Evet</dd>
+
+                    <dt class="col-sm-4">Kullanıcı adı</dt>
+                    <dd class="col-sm-8">
+                        @(Model.MvcUserName ?? "-")
+                    </dd>
+                </dl>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0">
+                    MVC tarafında doğrulanmış bir kullanıcı bulunmuyor.
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">API Authentication Durumu</h2>
+
+            <p>
+                HTTP durum kodu:
+                <strong>@Model.ApiStatusCode</strong>
+            </p>
+
+            @if (Model.ApiSession is not null)
+            {
+                <div class="alert alert-success">
+                    Authentication cookie MVC üzerinden API'ye başarıyla aktarıldı.
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Kullanıcı kimliği</dt>
+                    <dd class="col-sm-8">@Model.ApiSession.UserId</dd>
+
+                    <dt class="col-sm-4">E-posta</dt>
+                    <dd class="col-sm-8">@Model.ApiSession.Email</dd>
+
+                    <dt class="col-sm-4">Ad soyad</dt>
+                    <dd class="col-sm-8">@Model.ApiSession.DisplayName</dd>
+
+                    <dt class="col-sm-4">Roller</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.ApiSession.Roles.Length == 0)
+                        {
+                            <span>-</span>
+                        }
+                        else
+                        {
+                            @string.Join(", ", Model.ApiSession.Roles)
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">TOTP etkin</dt>
+                    <dd class="col-sm-8">
+                        @(Model.ApiSession.TwoFactorEnabled ? "Evet" : "Hayır")
+                    </dd>
+                </dl>
+            }
+            else
+            {
+                <div class="alert alert-secondary mb-0">
+                    @(Model.ErrorMessage ?? "API oturum bilgisi bulunamadı.")
+                </div>
+            }
+        </div>
+    </section>
+
+    @if (Model.MvcIsAuthenticated)
+    {
+        <form asp-controller="Account"
+              asp-action="Logout"
+              method="post">
+            <button type="submit" class="btn btn-danger">
+                Oturumu Kapat
+            </button>
+        </form>
+    }
+</div>

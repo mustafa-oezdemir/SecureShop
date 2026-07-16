@@ -75,7 +75,7 @@ public static class IdentityServiceCollectionExtensions
         services.ConfigureApplicationCookie(options =>
         {
             options.Cookie.Name =
-                "__Host-SecureShop.Api.Auth";
+                SharedCookieAuthenticationDefaults.CookieName;
 
             options.Cookie.HttpOnly = true;
 

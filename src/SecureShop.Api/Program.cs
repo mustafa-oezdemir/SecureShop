@@ -21,6 +21,11 @@ var connectionString =
     ?? throw new InvalidOperationException(
         "Connection string 'DefaultConnection' was not found.");
 
+builder.Services
+    .AddSecureShopSharedCookieDataProtection(
+        builder.Configuration,
+        builder.Environment);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
@@ -96,6 +101,10 @@ else
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 app.UseAuthorization();
