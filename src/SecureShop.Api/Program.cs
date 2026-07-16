@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 using SecureShop.Api.Configuration;
 using SecureShop.Api.Data;
 using SecureShop.Api.Data.Seed;
@@ -80,6 +81,10 @@ builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddControllers();
+builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 
 var app = builder.Build();
 
@@ -105,6 +110,7 @@ else
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseCookiePolicy();
 
