@@ -1,0 +1,57 @@
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var userName = User.Identity?.Name ?? "Kullanıcı";
+    var initial = userName.Length > 0
+        ? userName[..1].ToUpperInvariant()
+        : "K";
+}
+
+<ul class="navbar-nav align-items-sm-center auth-menu">
+    @if (isAuthenticated)
+    {
+        <li class="nav-item dropdown">
+            <button class="btn auth-user-button dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Kullanıcı menüsünü aç">
+                <span class="auth-avatar" aria-hidden="true">@initial</span>
+                <span class="auth-user-name d-none d-md-inline">@userName</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end auth-dropdown shadow-lg">
+                <li class="auth-dropdown-header">
+                    <span class="small text-body-secondary">Oturum açıldı</span>
+                    <strong class="d-block text-truncate">@userName</strong>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Account" asp-action="Session">
+                        Oturum bilgileri
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          asp-antiforgery="false"
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="dropdown-item text-danger" type="submit">
+                            Güvenli çıkış
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item mt-2 mt-sm-0">
+            <a class="btn auth-login-button"
+               asp-controller="Account"
+               asp-action="Login">
+                Giriş Yap
+            </a>
+        </li>
+    }
+</ul>
