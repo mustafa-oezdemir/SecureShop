@@ -6,6 +6,7 @@ using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
 using SecureShop.Api.Features.Auth.External;
 using SecureShop.Api.Features.Auth.TwoFactor;
+using SecureShop.Api.Features.Products;
 using SecureShop.Api.Security.Identity;
 using SecureShop.Api.Security.Policies;
 using SecureShop.Api.Services.Email;
@@ -76,6 +77,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<IdentitySeeder>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 builder.Services.AddControllers();
 
