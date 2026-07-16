@@ -1,0 +1,33 @@
+@model SecureShop.Mvc.Models.ViewModels.ProductListViewModel
+@{ ViewData["Title"] = "Ürünler"; }
+
+<h1>Ürünler</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+}
+else if (Model.Products.Count == 0)
+{
+    <div class="alert alert-info">Henüz görüntülenecek aktif ürün bulunmuyor.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var product in Model.Products)
+        {
+            <div class="col">
+                <article class="card h-100">
+                    <div class="card-body">
+                        <span class="badge bg-secondary">@product.CategoryName</span>
+                        <h2 class="h5 mt-2">@product.Name</h2>
+                        <p class="text-muted">SKU: @product.Sku</p>
+                        <p class="fw-bold">@product.Price.ToString("N2") €</p>
+                        <p>Stok: @product.StockQuantity</p>
+                        <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary">Detay</a>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}

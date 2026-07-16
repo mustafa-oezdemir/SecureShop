@@ -1,0 +1,16 @@
+@model SecureShop.Mvc.Models.Responses.ProductResponse
+@{ ViewData["Title"] = Model.Name; }
+
+<article class="card">
+    <div class="card-body">
+        <span class="badge bg-secondary">@Model.CategoryName</span>
+        <h1 class="mt-2">@Model.Name</h1>
+        <p class="text-muted">SKU: @Model.Sku</p>
+        <p>@(Model.Description ?? "Bu ürün için açıklama bulunmuyor.")</p>
+        <dl class="row">
+            <dt class="col-sm-3">Fiyat</dt><dd class="col-sm-9">@Model.Price.ToString("N2") €</dd>
+            <dt class="col-sm-3">Stok</dt><dd class="col-sm-9">@Model.StockQuantity</dd>
+        </dl>
+        <a asp-action="Index" class="btn btn-outline-secondary">Ürünlere dön</a>
+    </div>
+</article>
