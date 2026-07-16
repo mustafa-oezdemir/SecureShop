@@ -34,3 +34,30 @@ document.querySelectorAll("[data-product-gallery]").forEach((gallery) => {
         });
     });
 });
+
+document.querySelectorAll("[data-product-image-input]").forEach((input) => {
+    const preview = document.querySelector("[data-product-image-preview]");
+
+    if (!preview) {
+        return;
+    }
+
+    input.addEventListener("change", () => {
+        preview.replaceChildren();
+
+        Array.from(input.files ?? []).slice(0, 10).forEach((file, index) => {
+            const item = document.createElement("div");
+            const image = document.createElement("img");
+            const label = document.createElement("span");
+
+            item.className = "product-upload-preview-item";
+            image.src = URL.createObjectURL(file);
+            image.alt = `Seçilen fotoğraf ${index + 1}`;
+            image.addEventListener("load", () => URL.revokeObjectURL(image.src));
+            label.textContent = index === 0 ? "Ana fotoğraf" : `${index + 1}. fotoğraf`;
+
+            item.append(image, label);
+            preview.append(item);
+        });
+    });
+});

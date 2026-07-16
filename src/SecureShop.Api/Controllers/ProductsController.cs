@@ -55,6 +55,7 @@ public sealed class ProductsController : ControllerBase
         Ok(await _productService.GetCategoryOptionsAsync(cancellationToken));
 
     [HttpPost]
+    [Authorize(Policy = AppPolicies.AdminOnly)]
     public async Task<ActionResult<ProductResponse>> Create(
         CreateProductRequest request,
         CancellationToken cancellationToken)

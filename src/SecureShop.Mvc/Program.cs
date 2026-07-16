@@ -62,6 +62,7 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
+builder.Services.AddScoped<IProductImageStorage, ProductImageStorage>();
 
 builder.Services
     .AddHttpClient<IAuthApiService, AuthApiService>(

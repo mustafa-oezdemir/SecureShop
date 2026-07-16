@@ -106,13 +106,14 @@ public sealed class CatalogSeeder
             var expectedImageUrls = Enumerable
                 .Range(1, definition.ImageCount)
                 .Select(index =>
-                    $"/images/products/{definition.AssetPrefix}-{index}.png")
+                    $"/images/products/{definition.AssetPrefix}/{index}.png")
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             foreach (var obsoleteImage in product.Images
                 .Where(image => !expectedImageUrls.Contains(image.ImageUrl))
                 .ToList())
             {
+                product.Images.Remove(obsoleteImage);
                 _dbContext.ProductImages.Remove(obsoleteImage);
             }
 
@@ -127,7 +128,7 @@ public sealed class CatalogSeeder
                 }
 
                 product.AddImage(
-                    $"/images/products/{definition.AssetPrefix}-{index}.png",
+                    $"/images/products/{definition.AssetPrefix}/{index}.png",
                     $"{definition.Name} - görünüm {index}",
                     sortOrder,
                     isPrimary: index == 1);

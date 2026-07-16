@@ -68,6 +68,17 @@ public sealed class ProductService : IProductService
             request.StockQuantity,
             request.Description);
 
+        for (var index = 0; index < request.Images.Count; index++)
+        {
+            var image = request.Images[index];
+
+            product.AddImage(
+                image.ImageUrl,
+                image.AltText,
+                index,
+                isPrimary: index == 0);
+        }
+
         _dbContext.Products.Add(product);
 
         try

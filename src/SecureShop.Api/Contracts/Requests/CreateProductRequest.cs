@@ -24,4 +24,7 @@ public sealed class CreateProductRequest
 
     [Range(0, int.MaxValue)]
     public int StockQuantity { get; init; }
+
+    [MaxLength(10)]
+    public IReadOnlyList<CreateProductImageRequest> Images { get; init; } = [];
 }

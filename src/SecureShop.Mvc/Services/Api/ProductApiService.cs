@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using SecureShop.Mvc.Http;
 using SecureShop.Mvc.Models.Responses;
 using SecureShop.Mvc.Services.Interfaces;
@@ -98,6 +99,130 @@ public sealed class ProductApiService : IProductApiService
         {
             return ApiResponse<ProductResponse>.Failure(
                 HttpStatusCode.GatewayTimeout, "API isteği zaman aşımına uğradı.");
+        }
+    }
+
+    public async Task<ApiResponse<IReadOnlyList<CategoryOptionResponse>>> GetCategoryOptionsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var response = await _httpClient.GetAsync(
+                "api/products/category-options",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiResponse<IReadOnlyList<CategoryOptionResponse>>.Failure(
+                    response.StatusCode,
+                    "Kategori seçenekleri API'den alınamadı.");
+            }
+
+            var categories = await response.Content
+                .ReadFromJsonAsync<List<CategoryOptionResponse>>(
+                    cancellationToken: cancellationToken);
+
+            return categories is null
+                ? ApiResponse<IReadOnlyList<CategoryOptionResponse>>.Failure(
+                    HttpStatusCode.BadGateway,
+                    "API geçerli kategori seçenekleri döndürmedi.")
+                : ApiResponse<IReadOnlyList<CategoryOptionResponse>>.Success(
+                    response.StatusCode,
+                    categories);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Kategori seçenekleri API isteği tamamlanamadı.");
+
+            return ApiResponse<IReadOnlyList<CategoryOptionResponse>>.Failure(
+                HttpStatusCode.ServiceUnavailable,
+                "SecureShop API hizmetine ulaşılamıyor.");
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogError(
+                exception,
+                "Kategori seçenekleri API response'u okunamadı.");
+
+            return ApiResponse<IReadOnlyList<CategoryOptionResponse>>.Failure(
+                HttpStatusCode.BadGateway,
+                "API kategori response formatı geçersiz.");
+        }
+    }
+
+    public async Task<ApiResponse<ProductResponse>> CreateProductAsync(
+        CreateProductRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var response = await _httpClient.PostAsJsonAsync(
+                "api/products",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await ReadProblemDetailAsync(
+                    response,
+                    cancellationToken);
+
+                return ApiResponse<ProductResponse>.Failure(
+                    response.StatusCode,
+                    message ?? "Ürün oluşturulamadı.");
+            }
+
+            var product = await response.Content
+                .ReadFromJsonAsync<ProductResponse>(
+                    cancellationToken: cancellationToken);
+
+            return product is null
+                ? ApiResponse<ProductResponse>.Failure(
+                    HttpStatusCode.BadGateway,
+                    "API geçerli ürün response'u döndürmedi.")
+                : ApiResponse<ProductResponse>.Success(
+                    response.StatusCode,
+                    product);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Ürün oluşturma API isteği tamamlanamadı.");
+
+            return ApiResponse<ProductResponse>.Failure(
+                HttpStatusCode.ServiceUnavailable,
+                "SecureShop API hizmetine ulaşılamıyor.");
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogError(
+                exception,
+                "Ürün oluşturma API response'u okunamadı.");
+
+            return ApiResponse<ProductResponse>.Failure(
+                HttpStatusCode.BadGateway,
+                "API ürün response formatı geçersiz.");
+        }
+    }
+
+    private static async Task<string?> ReadProblemDetailAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var problem = await response.Content
+                .ReadFromJsonAsync<ProblemDetails>(
+                    cancellationToken: cancellationToken);
+
+            return problem?.Detail;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 }

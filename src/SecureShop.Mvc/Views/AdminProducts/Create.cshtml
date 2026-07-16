@@ -1,0 +1,99 @@
+@model SecureShop.Mvc.Models.ViewModels.CreateProductViewModel
+@{
+    ViewData["Title"] = "Yeni ürün ekle";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card border-0 shadow-sm admin-product-form-card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="mb-4">
+                    <span class="text-uppercase text-primary fw-semibold small">Admin ürün yönetimi</span>
+                    <h1 class="mt-2">Yeni ürün ekle</h1>
+                    <p class="text-body-secondary mb-0">
+                        Birden fazla fotoğraf seçebilirsiniz. İlk fotoğraf ana ürün görseli olur.
+                    </p>
+                </div>
+
+                <form asp-action="Create"
+                      method="post"
+                      enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Sku" class="form-label"></label>
+                            <input asp-for="Sku" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="Sku" class="text-danger"></span>
+                            <div class="form-text">SKU aynı zamanda otomatik görsel klasörü olur.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">Kategori seçin</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Price" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Price" class="form-control" />
+                                <span class="input-group-text">€</span>
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="StockQuantity" class="form-label"></label>
+                            <input asp-for="StockQuantity" class="form-control" />
+                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Images" class="form-label"></label>
+                            <div class="product-upload-zone">
+                                <input asp-for="Images"
+                                       type="file"
+                                       class="form-control"
+                                       accept="image/png,image/jpeg,image/webp"
+                                       multiple
+                                       data-product-image-input />
+                                <div class="form-text mt-2">
+                                    PNG, JPEG veya WebP; en fazla 10 fotoğraf ve fotoğraf başına 5 MB.
+                                </div>
+                                <div class="product-upload-preview mt-3"
+                                     data-product-image-preview></div>
+                            </div>
+                            <span asp-validation-for="Images" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            Ürünü ve fotoğrafları kaydet
+                        </button>
+                        <a asp-controller="Products" asp-action="Index" class="btn btn-outline-secondary">
+                            İptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -29,6 +29,14 @@
                         Oturum bilgileri
                     </a>
                 </li>
+                @if (User.IsInRole(AppRoles.Admin))
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="AdminProducts" asp-action="Create">
+                            Yeni ürün ekle
+                        </a>
+                    </li>
+                }
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                     <form asp-controller="Account"
