@@ -13,35 +13,40 @@ public sealed class CatalogSeeder
             "Aktif gürültü engelleme, şeffaf mod ve 40 saate kadar pil ömrü sunan premium kablosuz kulaklık.",
             249.90m,
             24,
-            "headphones"),
+            "headphones",
+            5),
         new(
             "Akıllı Spor Saati",
             "SSH-WATCH-01",
             "AMOLED ekran, GPS, sağlık takibi ve suya dayanıklı alüminyum gövdeli akıllı saat.",
             189.90m,
             31,
-            "smartwatch"),
+            "smartwatch",
+            0),
         new(
             "RGB Mekanik Klavye",
             "SSH-KEYBOARD-01",
             "Hot-swap mekanik switch, RGB aydınlatma ve kompakt alüminyum kasaya sahip oyuncu klavyesi.",
             139.90m,
             18,
-            "keyboard"),
+            "keyboard",
+            0),
         new(
             "Taşınabilir Bluetooth Hoparlör",
             "SSH-SPEAKER-01",
             "360 derece ses, IP67 koruma ve 18 saat pil ömrü sunan taşınabilir Bluetooth hoparlör.",
             119.90m,
             42,
-            "speaker"),
+            "speaker",
+            0),
         new(
             "4K Aksiyon Kamerası",
             "SSH-CAMERA-01",
             "4K video, gelişmiş görüntü sabitleme ve su geçirmez gövdeye sahip kompakt aksiyon kamerası.",
             329.90m,
             15,
-            "action-camera")
+            "action-camera",
+            0)
     ];
 
     private readonly AppDbContext _dbContext;
@@ -98,7 +103,20 @@ public sealed class CatalogSeeder
                 _dbContext.Products.Add(product);
             }
 
-            for (var index = 1; index <= 5; index++)
+            var expectedImageUrls = Enumerable
+                .Range(1, definition.ImageCount)
+                .Select(index =>
+                    $"/images/products/{definition.AssetPrefix}-{index}.png")
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var obsoleteImage in product.Images
+                .Where(image => !expectedImageUrls.Contains(image.ImageUrl))
+                .ToList())
+            {
+                _dbContext.ProductImages.Remove(obsoleteImage);
+            }
+
+            for (var index = 1; index <= definition.ImageCount; index++)
             {
                 var sortOrder = index - 1;
 
@@ -121,7 +139,7 @@ public sealed class CatalogSeeder
         _logger.LogInformation(
             "Development catalog synchronized with {ProductCount} products and {ImageCount} images.",
             Products.Count,
-            Products.Count * 5);
+            Products.Sum(product => product.ImageCount));
     }
 
     private sealed record ProductSeedDefinition(
@@ -130,5 +148,6 @@ public sealed class CatalogSeeder
         string Description,
         decimal Price,
         int StockQuantity,
-        string AssetPrefix);
+        string AssetPrefix,
+        int ImageCount);
 }
