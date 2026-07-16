@@ -176,6 +176,44 @@ public sealed class IdentitySeeder
                 "{RoleName} development user created.",
                 roleName);
         }
+        else if (!string.IsNullOrWhiteSpace(password))
+        {
+            var resetToken =
+                await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var resetResult = await _userManager.ResetPasswordAsync(
+                user,
+                resetToken,
+                password);
+
+            ThrowIfFailed(
+                resetResult,
+                $"{roleName} development user password could not be synchronized.");
+
+            var resetAccessFailedResult =
+                await _userManager.ResetAccessFailedCountAsync(user);
+
+            ThrowIfFailed(
+                resetAccessFailedResult,
+                $"{roleName} development user access-failed count could not be reset.");
+
+            var clearLockoutResult =
+                await _userManager.SetLockoutEndDateAsync(user, null);
+
+            ThrowIfFailed(
+                clearLockoutResult,
+                $"{roleName} development user lockout could not be cleared.");
+
+            if (!await _userManager.CheckPasswordAsync(user, password))
+            {
+                throw new InvalidOperationException(
+                    $"{roleName} development user password synchronization verification failed.");
+            }
+
+            _logger.LogInformation(
+                "{RoleName} development user password synchronized from development configuration.",
+                roleName);
+        }
 
         if (await _userManager.IsInRoleAsync(user, roleName))
         {
