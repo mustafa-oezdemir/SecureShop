@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using SecureShop.Mvc.Http;
+using SecureShop.Mvc.Models.Requests;
 using SecureShop.Mvc.Models.Responses;
 using SecureShop.Mvc.Services.Interfaces;
 
@@ -205,6 +206,161 @@ public sealed class ProductApiService : IProductApiService
             return ApiResponse<ProductResponse>.Failure(
                 HttpStatusCode.BadGateway,
                 "API ürün response formatı geçersiz.");
+        }
+    }
+
+    public Task<ApiResponse<IReadOnlyList<ProductResponse>>> GetManagementProductsAsync(
+        CancellationToken cancellationToken = default) =>
+        GetProductListAsync(
+            "api/products/management",
+            "Yönetim ürün listesi alınamadı.",
+            cancellationToken);
+
+    public Task<ApiResponse<ProductResponse>> GetManagementProductAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        GetProductResponseAsync(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                $"api/products/management/{id:D}"),
+            "Yönetim ürün bilgisi alınamadı.",
+            cancellationToken);
+
+    public Task<ApiResponse<ProductResponse>> UpdateProductAsync(
+        Guid id,
+        UpdateProductRequest request,
+        CancellationToken cancellationToken = default) =>
+        GetProductResponseAsync(
+            new HttpRequestMessage(
+                HttpMethod.Put,
+                $"api/products/{id:D}")
+            {
+                Content = JsonContent.Create(request)
+            },
+            "Ürün güncellenemedi.",
+            cancellationToken);
+
+    public Task<ApiResponse<ProductResponse>> SetProductStatusAsync(
+        Guid id,
+        SetProductStatusRequest request,
+        CancellationToken cancellationToken = default) =>
+        GetProductResponseAsync(
+            new HttpRequestMessage(
+                HttpMethod.Patch,
+                $"api/products/{id:D}/status")
+            {
+                Content = JsonContent.Create(request)
+            },
+            "Ürün durumu güncellenemedi.",
+            cancellationToken);
+
+    private async Task<ApiResponse<IReadOnlyList<ProductResponse>>> GetProductListAsync(
+        string requestUri,
+        string fallbackError,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await _httpClient.GetAsync(
+                requestUri,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiResponse<IReadOnlyList<ProductResponse>>.Failure(
+                    response.StatusCode,
+                    fallbackError);
+            }
+
+            var products = await response.Content
+                .ReadFromJsonAsync<List<ProductResponse>>(
+                    cancellationToken: cancellationToken);
+
+            return products is null
+                ? ApiResponse<IReadOnlyList<ProductResponse>>.Failure(
+                    HttpStatusCode.BadGateway,
+                    "API geçerli ürün listesi döndürmedi.")
+                : ApiResponse<IReadOnlyList<ProductResponse>>.Success(
+                    response.StatusCode,
+                    products);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Yönetim ürün listesi API isteği tamamlanamadı.");
+
+            return ApiResponse<IReadOnlyList<ProductResponse>>.Failure(
+                HttpStatusCode.ServiceUnavailable,
+                "SecureShop API hizmetine ulaşılamıyor.");
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogError(
+                exception,
+                "Yönetim ürün listesi response'u okunamadı.");
+
+            return ApiResponse<IReadOnlyList<ProductResponse>>.Failure(
+                HttpStatusCode.BadGateway,
+                "API ürün response formatı geçersiz.");
+        }
+    }
+
+    private async Task<ApiResponse<ProductResponse>> GetProductResponseAsync(
+        HttpRequestMessage request,
+        string fallbackError,
+        CancellationToken cancellationToken)
+    {
+        using (request)
+        {
+            try
+            {
+                using var response = await _httpClient.SendAsync(
+                    request,
+                    cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return ApiResponse<ProductResponse>.Failure(
+                        response.StatusCode,
+                        await ReadProblemDetailAsync(
+                            response,
+                            cancellationToken)
+                            ?? fallbackError);
+                }
+
+                var product = await response.Content
+                    .ReadFromJsonAsync<ProductResponse>(
+                        cancellationToken: cancellationToken);
+
+                return product is null
+                    ? ApiResponse<ProductResponse>.Failure(
+                        HttpStatusCode.BadGateway,
+                        "API geçerli ürün response'u döndürmedi.")
+                    : ApiResponse<ProductResponse>.Success(
+                        response.StatusCode,
+                        product);
+            }
+            catch (HttpRequestException exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Ürün yönetimi API isteği tamamlanamadı.");
+
+                return ApiResponse<ProductResponse>.Failure(
+                    HttpStatusCode.ServiceUnavailable,
+                    "SecureShop API hizmetine ulaşılamıyor.");
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Ürün yönetimi API response'u okunamadı.");
+
+                return ApiResponse<ProductResponse>.Failure(
+                    HttpStatusCode.BadGateway,
+                    "API ürün response formatı geçersiz.");
+            }
         }
     }
 

@@ -24,6 +24,20 @@ public sealed class AdminProductsController : Controller
         _imageStorage = imageStorage;
     }
 
+    [HttpGet("")]
+    public async Task<IActionResult> Index(
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService
+            .GetManagementProductsAsync(cancellationToken);
+
+        return View(new AdminProductListViewModel
+        {
+            Products = result.Data ?? [],
+            ErrorMessage = result.ErrorMessage
+        });
+    }
+
     [HttpGet("create")]
     public async Task<IActionResult> Create(
         CancellationToken cancellationToken)
@@ -113,8 +127,133 @@ public sealed class AdminProductsController : Controller
             });
     }
 
+    [HttpGet("{id:guid}/edit")]
+    public async Task<IActionResult> Edit(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService
+            .GetManagementProductAsync(id, cancellationToken);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            TempData["ErrorMessage"] =
+                result.ErrorMessage ?? "Ürün bulunamadı.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var product = result.Data;
+        var model = new EditProductViewModel
+        {
+            Id = product.Id,
+            CategoryId = product.CategoryId,
+            Name = product.Name,
+            Sku = product.Sku,
+            Description = product.Description,
+            Price = product.Price,
+            StockQuantity = product.StockQuantity,
+            RowVersion = product.RowVersion,
+            Images = product.Images
+        };
+
+        await LoadCategoriesAsync(model, cancellationToken);
+
+        return View(model);
+    }
+
+    [HttpPost("{id:guid}/edit")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(
+        Guid id,
+        EditProductViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (id != model.Id)
+        {
+            return BadRequest();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await LoadCategoriesAsync(model, cancellationToken);
+            return View(model);
+        }
+
+        var request = new UpdateProductRequest(
+            model.CategoryId,
+            model.Name.Trim(),
+            model.Sku.Trim(),
+            string.IsNullOrWhiteSpace(model.Description)
+                ? null
+                : model.Description.Trim(),
+            model.Price,
+            model.StockQuantity,
+            model.RowVersion);
+
+        var result = await _productApiService.UpdateProductAsync(
+            id,
+            request,
+            cancellationToken);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                result.ErrorMessage ?? "Ürün güncellenemedi.");
+
+            await LoadCategoriesAsync(model, cancellationToken);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("{id:guid}/status")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetStatus(
+        Guid id,
+        bool isActive,
+        string rowVersion,
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService.SetProductStatusAsync(
+            id,
+            new SetProductStatusRequest(isActive, rowVersion),
+            cancellationToken);
+
+        TempData[result.IsSuccess ? "SuccessMessage" : "ErrorMessage"] =
+            result.IsSuccess
+                ? isActive
+                    ? "Ürün yeniden aktifleştirildi."
+                    : "Ürün pasife alındı."
+                : result.ErrorMessage ?? "Ürün durumu güncellenemedi.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task LoadCategoriesAsync(
         CreateProductViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService
+            .GetCategoryOptionsAsync(cancellationToken);
+
+        model.Categories = result.Data ?? [];
+
+        if (!result.IsSuccess)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                result.ErrorMessage
+                    ?? "Kategori seçenekleri yüklenemedi.");
+        }
+    }
+
+    private async Task LoadCategoriesAsync(
+        EditProductViewModel model,
         CancellationToken cancellationToken)
     {
         var result = await _productApiService

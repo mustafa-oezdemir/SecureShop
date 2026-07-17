@@ -5,6 +5,7 @@ using SecureShop.Mvc.Http;
 using SecureShop.Mvc.Security;
 using SecureShop.Mvc.Services.Api;
 using SecureShop.Mvc.Services.Interfaces;
+using SecureShop.Mvc.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 

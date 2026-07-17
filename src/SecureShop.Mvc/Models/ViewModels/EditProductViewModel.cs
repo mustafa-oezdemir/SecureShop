@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 using SecureShop.Mvc.Models.Responses;
 
 namespace SecureShop.Mvc.Models.ViewModels;
 
-public sealed class CreateProductViewModel
+public sealed class EditProductViewModel
 {
+    public Guid Id { get; set; }
+
     [Required(ErrorMessage = "Kategori seçin.")]
     [Display(Name = "Kategori")]
     public Guid CategoryId { get; set; }
@@ -38,9 +39,10 @@ public sealed class CreateProductViewModel
     [Display(Name = "Stok adedi")]
     public int StockQuantity { get; set; }
 
-    [Required(ErrorMessage = "En az bir ürün fotoğrafı seçin.")]
-    [Display(Name = "Ürün fotoğrafları")]
-    public List<IFormFile> Images { get; set; } = [];
+    [Required]
+    public string RowVersion { get; set; } = string.Empty;
+
+    public IReadOnlyList<ProductImageResponse> Images { get; set; } = [];
 
     public IReadOnlyList<CategoryOptionResponse> Categories { get; set; } = [];
 }

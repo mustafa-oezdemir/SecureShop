@@ -19,4 +19,21 @@ public interface IProductApiService
     Task<ApiResponse<ProductResponse>> CreateProductAsync(
         CreateProductRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<IReadOnlyList<ProductResponse>>> GetManagementProductsAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<ProductResponse>> GetManagementProductAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<ProductResponse>> UpdateProductAsync(
+        Guid id,
+        UpdateProductRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<ProductResponse>> SetProductStatusAsync(
+        Guid id,
+        SetProductStatusRequest request,
+        CancellationToken cancellationToken = default);
 }

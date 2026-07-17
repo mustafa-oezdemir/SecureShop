@@ -65,6 +65,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AppPolicies.AdminOnly)]
     public async Task<ActionResult<ProductResponse>> Update(
         Guid id,
         UpdateProductRequest request,
@@ -75,6 +76,7 @@ public sealed class ProductsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Policy = AppPolicies.AdminOnly)]
     public async Task<ActionResult<ProductResponse>> SetStatus(
         Guid id,
         SetProductStatusRequest request,
