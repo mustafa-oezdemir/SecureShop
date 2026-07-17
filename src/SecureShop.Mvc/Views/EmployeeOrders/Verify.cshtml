@@ -1,0 +1,41 @@
+@model SecureShop.Mvc.Models.ViewModels.QrVerificationViewModel
+@{
+    ViewData["Title"] = "Sipariş QR doğrulama";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-lg-5">
+                <span class="text-uppercase text-primary fw-semibold small">Güvenli teslim</span>
+                <h1 class="mt-2">QR kod doğrula</h1>
+                <p class="text-body-secondary">
+                    QR bağlantısından gelen token otomatik dolar. Gerekirse token'ı elle yapıştırın.
+                </p>
+                @if (TempData["SuccessMessage"] is string successMessage)
+                {
+                    <div class="alert alert-success">@successMessage</div>
+                }
+                <form asp-action="Verify" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <label asp-for="Token" class="form-label"></label>
+                    <textarea asp-for="Token" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Token" class="text-danger"></span>
+                    <button class="btn btn-primary mt-3" type="submit">
+                        Doğrula ve teslimi tamamla
+                    </button>
+                </form>
+                @if (Model.Order is not null)
+                {
+                    <div class="alert alert-success mt-4 mb-0">
+                        <strong>@Model.Order.OrderNumber</strong> teslim edildi.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

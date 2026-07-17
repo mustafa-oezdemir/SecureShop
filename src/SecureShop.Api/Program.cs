@@ -7,8 +7,11 @@ using SecureShop.Api.Data.Seed;
 using SecureShop.Api.Domain.Constants;
 using SecureShop.Api.Features.Auth.External;
 using SecureShop.Api.Features.Auth.TwoFactor;
+using SecureShop.Api.Features.Audit;
 using SecureShop.Api.Features.Cart;
+using SecureShop.Api.Features.Orders;
 using SecureShop.Api.Features.Products;
+using SecureShop.Api.Features.QrCodes;
 using SecureShop.Api.Security;
 using SecureShop.Api.Security.Identity;
 using SecureShop.Api.Security.Policies;
@@ -45,6 +48,23 @@ builder.Services.AddSecureShopEmail(
 
 builder.Services.AddSecureShopTwoFactor(
     builder.Configuration);
+
+builder.Services
+    .AddOptions<OrderQrOptions>()
+    .Bind(builder.Configuration.GetSection(
+        OrderQrOptions.SectionName))
+    .Validate(
+        options =>
+            Uri.TryCreate(
+                options.VerificationBaseUrl,
+                UriKind.Absolute,
+                out var uri)
+            && uri.Scheme == Uri.UriSchemeHttps,
+        "QR doğrulama adresi geçerli bir HTTPS adresi olmalıdır.")
+    .Validate(
+        options => options.LifetimeMinutes is >= 5 and <= 525_600,
+        "QR token süresi 5 ile 525600 dakika arasında olmalıdır.")
+    .ValidateOnStart();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -85,8 +105,14 @@ builder.Services.AddScoped<CatalogSeeder>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IAuditQueryService, AuditQueryService>();
+builder.Services.AddSingleton<IQrCodeGenerator, PngQrCodeGenerator>();
+builder.Services.AddSingleton<IOrderQrTokenService, OrderQrTokenService>();
 
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
     RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -118,7 +144,19 @@ else
     app.UseHsts();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers.XFrameOptions = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers.ContentSecurityPolicy =
+        "default-src 'none'; frame-ancestors 'none';";
+
+    await next();
+});
 
 app.UseRouting();
 app.UseRateLimiter();
@@ -131,3 +169,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
+
+public partial class Program
+{
+}

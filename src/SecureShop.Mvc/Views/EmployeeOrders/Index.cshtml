@@ -1,0 +1,55 @@
+@model SecureShop.Mvc.Models.ViewModels.OrderListViewModel
+@{
+    ViewData["Title"] = "Sipariş yönetimi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="text-uppercase text-primary fw-semibold small">Personel</span>
+        <h1 class="mb-0">Sipariş yönetimi</h1>
+    </div>
+    <a asp-action="Verify" class="btn btn-primary">QR doğrula</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Sipariş</th>
+                        <th>Tarih</th>
+                        <th>Alıcı</th>
+                        <th>Toplam</th>
+                        <th>Durum</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@order.OrderNumber</td>
+                            <td>@order.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@order.RecipientName</td>
+                            <td>@order.TotalAmount.ToString("N2") €</td>
+                            <td><span class="badge text-bg-primary">@order.Status</span></td>
+                            <td class="text-end">
+                                <a asp-action="Details"
+                                   asp-route-orderNumber="@order.OrderNumber"
+                                   class="btn btn-sm btn-outline-primary">
+                                    İşlemler
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

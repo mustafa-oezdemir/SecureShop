@@ -141,6 +141,62 @@ builder.Services
         })
     .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
+builder.Services
+    .AddHttpClient<IOrderApiService, OrderApiService>(
+        (serviceProvider, client) =>
+        {
+            var apiSettings = serviceProvider
+                .GetRequiredService<IOptions<ApiSettings>>()
+                .Value;
+
+            client.BaseAddress = new Uri(
+                $"{apiSettings.BaseUrl.TrimEnd('/')}/",
+                UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(
+                    "application/json"));
+        })
+    .ConfigurePrimaryHttpMessageHandler(
+        () => new SocketsHttpHandler
+        {
+            UseCookies = false,
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip
+                | DecompressionMethods.Deflate
+                | DecompressionMethods.Brotli
+        })
+    .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
+builder.Services
+    .AddHttpClient<IAuditApiService, AuditApiService>(
+        (serviceProvider, client) =>
+        {
+            var apiSettings = serviceProvider
+                .GetRequiredService<IOptions<ApiSettings>>()
+                .Value;
+
+            client.BaseAddress = new Uri(
+                $"{apiSettings.BaseUrl.TrimEnd('/')}/",
+                UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(
+                    "application/json"));
+        })
+    .ConfigurePrimaryHttpMessageHandler(
+        () => new SocketsHttpHandler
+        {
+            UseCookies = false,
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip
+                | DecompressionMethods.Deflate
+                | DecompressionMethods.Brotli
+        })
+    .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -150,6 +206,20 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers.XFrameOptions = "DENY";
+    context.Response.Headers["Referrer-Policy"] =
+        "strict-origin-when-cross-origin";
+    context.Response.Headers.ContentSecurityPolicy =
+        "default-src 'self'; img-src 'self' data:; " +
+        "style-src 'self' 'unsafe-inline'; script-src 'self'; " +
+        "font-src 'self'; frame-ancestors 'none'; base-uri 'self'; " +
+        "form-action 'self';";
+
+    await next();
+});
 app.UseRouting();
 
 app.UseCookiePolicy();

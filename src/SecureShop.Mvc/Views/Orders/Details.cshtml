@@ -1,0 +1,73 @@
+@model SecureShop.Mvc.Models.Responses.OrderResponse
+@{
+    ViewData["Title"] = $"Sipariş {Model.OrderNumber}";
+}
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <span class="text-uppercase text-primary fw-semibold small">Sipariş detayı</span>
+        <h1 class="mt-2 mb-1">@Model.OrderNumber</h1>
+        <span class="badge text-bg-primary">@Model.Status</span>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Siparişlerime dön</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Ürünler</h2>
+                @foreach (var item in Model.Items)
+                {
+                    <div class="d-flex justify-content-between gap-3 py-3 border-bottom">
+                        <div>
+                            <a asp-controller="Products" asp-action="Details"
+                               asp-route-sku="@item.Sku"
+                               class="fw-semibold text-decoration-none">
+                                @item.ProductName
+                            </a>
+                            <div class="text-body-secondary small">
+                                SKU: @item.Sku · @item.Quantity adet × @item.UnitPrice.ToString("N2") €
+                            </div>
+                        </div>
+                        <strong>@item.LineTotal.ToString("N2") €</strong>
+                    </div>
+                }
+                <div class="d-flex justify-content-between fs-5 pt-3">
+                    <strong>Toplam</strong>
+                    <strong>@Model.TotalAmount.ToString("N2") €</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="h5">Teslimat</h2>
+                <strong>@Model.RecipientName</strong>
+                <div>@Model.AddressLine</div>
+                <div>@Model.PostalCode @Model.City</div>
+                <div>@Model.Country</div>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.QrCodeDataUrl))
+        {
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <h2 class="h5">Teslim QR kodu</h2>
+                    <p class="small text-body-secondary">
+                        Siparişi teslim alırken personele gösterin.
+                    </p>
+                    <img src="@Model.QrCodeDataUrl"
+                         alt="Sipariş teslim QR kodu"
+                         class="order-qr-image" />
+                </div>
+            </div>
+        }
+    </div>
+</div>

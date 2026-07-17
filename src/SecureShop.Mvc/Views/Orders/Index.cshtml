@@ -1,0 +1,67 @@
+@model SecureShop.Mvc.Models.ViewModels.OrderListViewModel
+@{
+    ViewData["Title"] = "Siparişlerim";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span class="text-uppercase text-primary fw-semibold small">Hesabım</span>
+        <h1 class="mb-0">Siparişlerim</h1>
+    </div>
+    <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">
+        Alışverişe devam et
+    </a>
+</div>
+
+@if (TempData["ErrorMessage"] is string operationError)
+{
+    <div class="alert alert-danger">@operationError</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+else if (Model.Orders.Count == 0)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+            <h2 class="h4">Henüz siparişiniz yok</h2>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary">
+                Ürünleri keşfet
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var order in Model.Orders)
+        {
+            <div class="col-12">
+                <article class="card border-0 shadow-sm order-card">
+                    <div class="card-body p-4 d-flex flex-wrap justify-content-between gap-3">
+                        <div>
+                            <span class="text-body-secondary small">
+                                @order.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                            </span>
+                            <h2 class="h5 mt-1 mb-2">@order.OrderNumber</h2>
+                            <span class="badge text-bg-primary">@order.Status</span>
+                        </div>
+                        <div class="text-end">
+                            <strong class="d-block fs-5">@order.TotalAmount.ToString("N2") €</strong>
+                            <span class="text-body-secondary small">@order.Items.Count ürün satırı</span>
+                            <div class="mt-2">
+                                <a asp-action="Details"
+                                   asp-route-orderNumber="@order.OrderNumber"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Detay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}

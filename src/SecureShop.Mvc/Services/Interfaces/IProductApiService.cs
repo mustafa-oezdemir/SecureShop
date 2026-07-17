@@ -31,6 +31,10 @@ public interface IProductApiService
         Guid id,
         CancellationToken cancellationToken = default);
 
+    Task<ApiResponse<ProductResponse>> GetManagementProductBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken = default);
+
     Task<ApiResponse<ProductResponse>> UpdateProductAsync(
         Guid id,
         UpdateProductRequest request,

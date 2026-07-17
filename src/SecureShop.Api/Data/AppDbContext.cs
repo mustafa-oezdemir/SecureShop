@@ -33,6 +33,12 @@ public sealed class AppDbContext
 
     public DbSet<CartItem> CartItems => Set<CartItem>();
 
+    public DbSet<Order> Orders => Set<Order>();
+
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

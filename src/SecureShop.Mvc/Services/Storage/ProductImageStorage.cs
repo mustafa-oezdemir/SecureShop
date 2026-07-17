@@ -25,11 +25,40 @@ public sealed class ProductImageStorage : IProductImageStorage
         _environment = environment;
     }
 
-    public async Task<ProductImageStorageResult> SaveAsync(
+    public Task<ProductImageStorageResult> SaveAsync(
         IReadOnlyList<IFormFile> files,
         string folderName,
         string productName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        SaveCoreAsync(
+            files,
+            folderName,
+            productName,
+            existingImageCount: 0,
+            requireNewDirectory: true,
+            cancellationToken);
+
+    public Task<ProductImageStorageResult> SaveAdditionalAsync(
+        IReadOnlyList<IFormFile> files,
+        string folderName,
+        string productName,
+        int existingImageCount,
+        CancellationToken cancellationToken = default) =>
+        SaveCoreAsync(
+            files,
+            folderName,
+            productName,
+            existingImageCount,
+            requireNewDirectory: false,
+            cancellationToken);
+
+    private async Task<ProductImageStorageResult> SaveCoreAsync(
+        IReadOnlyList<IFormFile> files,
+        string folderName,
+        string productName,
+        int existingImageCount,
+        bool requireNewDirectory,
+        CancellationToken cancellationToken)
     {
         if (files.Count is < 1 or > MaximumImageCount)
         {
@@ -37,7 +66,14 @@ public sealed class ProductImageStorage : IProductImageStorage
                 $"1 ile {MaximumImageCount} arasında fotoğraf seçin.");
         }
 
-        var normalizedFolderName = folderName.Trim().ToLowerInvariant();
+        if (existingImageCount is < 0 or > MaximumImageCount
+            || existingImageCount + files.Count > MaximumImageCount)
+        {
+            return ProductImageStorageResult.Failure(
+                $"Bir üründe en fazla {MaximumImageCount} fotoğraf olabilir.");
+        }
+
+        var normalizedFolderName = folderName.Trim();
 
         if (string.IsNullOrWhiteSpace(normalizedFolderName)
             || normalizedFolderName.Any(character =>
@@ -58,14 +94,20 @@ public sealed class ProductImageStorage : IProductImageStorage
 
         EnsureInsideRoot(productsRoot, productDirectory);
 
-        if (Directory.Exists(productDirectory))
+        var directoryExists = Directory.Exists(productDirectory);
+
+        if (requireNewDirectory && directoryExists)
         {
             return ProductImageStorageResult.Failure(
                 "Bu SKU için görsel klasörü zaten bulunuyor.");
         }
 
-        Directory.CreateDirectory(productDirectory);
+        if (!directoryExists)
+        {
+            Directory.CreateDirectory(productDirectory);
+        }
 
+        var createdPaths = new List<string>(files.Count);
         try
         {
             var images = new List<CreateProductImageRequest>(files.Count);
@@ -103,10 +145,13 @@ public sealed class ProductImageStorage : IProductImageStorage
                         "Fotoğraf dosyasının içeriği uzantısıyla eşleşmiyor.");
                 }
 
-                var fileName = $"{index + 1:D2}-{Guid.NewGuid():N}{extension}";
+                var imageNumber = existingImageCount + index + 1;
+                var fileName = $"{imageNumber:D2}-{Guid.NewGuid():N}{extension}";
                 var destinationPath = Path.Combine(
                     productDirectory,
                     fileName);
+
+                createdPaths.Add(destinationPath);
 
                 await using var destination = new FileStream(
                     destinationPath,
@@ -120,7 +165,7 @@ public sealed class ProductImageStorage : IProductImageStorage
 
                 images.Add(new CreateProductImageRequest(
                     $"/images/products/{normalizedFolderName}/{fileName}",
-                    $"{productName.Trim()} - görünüm {index + 1}"));
+                    $"{productName.Trim()} - görünüm {imageNumber}"));
             }
 
             return ProductImageStorageResult.Success(
@@ -132,13 +177,62 @@ public sealed class ProductImageStorage : IProductImageStorage
                 or IOException
                 or UnauthorizedAccessException)
         {
-            if (Directory.Exists(productDirectory))
+            foreach (var createdPath in createdPaths)
             {
-                Directory.Delete(productDirectory, recursive: true);
+                if (File.Exists(createdPath))
+                {
+                    File.Delete(createdPath);
+                }
+            }
+
+            if (!directoryExists
+                && Directory.Exists(productDirectory)
+                && !Directory.EnumerateFileSystemEntries(productDirectory).Any())
+            {
+                Directory.Delete(productDirectory);
             }
 
             return ProductImageStorageResult.Failure(exception.Message);
         }
+    }
+
+    public Task DeleteFilesAsync(
+        IReadOnlyList<CreateProductImageRequest> images,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var productsRoot = Path.GetFullPath(Path.Combine(
+            _environment.WebRootPath,
+            "images",
+            "products"));
+
+        foreach (var image in images)
+        {
+            var relativePath = image.ImageUrl
+                .TrimStart('/')
+                .Replace('/', Path.DirectorySeparatorChar);
+            var candidate = Path.GetFullPath(Path.Combine(
+                _environment.WebRootPath,
+                relativePath));
+
+            EnsureInsideRoot(productsRoot, candidate);
+
+            if (File.Exists(candidate))
+            {
+                File.Delete(candidate);
+            }
+
+            var directory = Path.GetDirectoryName(candidate);
+            if (directory is not null
+                && Directory.Exists(directory)
+                && !Directory.EnumerateFileSystemEntries(directory).Any())
+            {
+                Directory.Delete(directory);
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task DeleteAsync(

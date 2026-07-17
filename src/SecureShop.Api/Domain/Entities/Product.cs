@@ -170,6 +170,33 @@ public sealed class Product
         MarkAsUpdated();
     }
 
+    public void DecreaseStock(int quantity)
+    {
+        if (quantity < 1 || quantity > StockQuantity)
+        {
+            throw new InvalidOperationException(
+                "Ürün stoğu sipariş miktarı için yetersiz.");
+        }
+
+        StockQuantity -= quantity;
+        MarkAsUpdated();
+    }
+
+    public void IncreaseStock(int quantity)
+    {
+        if (quantity < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+        }
+
+        checked
+        {
+            StockQuantity += quantity;
+        }
+
+        MarkAsUpdated();
+    }
+
     public void ChangeCategory(Guid categoryId)
     {
         if (categoryId == Guid.Empty)

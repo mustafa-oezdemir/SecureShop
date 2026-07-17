@@ -29,6 +29,27 @@
                         Oturum bilgileri
                     </a>
                 </li>
+                @if (User.IsInRole(AppRoles.Customer))
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="Orders" asp-action="Index">
+                            Siparişlerim
+                        </a>
+                    </li>
+                }
+                @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Employee))
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="EmployeeOrders" asp-action="Index">
+                            Sipariş yönetimi
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="EmployeeOrders" asp-action="Verify">
+                            QR doğrula
+                        </a>
+                    </li>
+                }
                 @if (User.IsInRole(AppRoles.Admin))
                 {
                     <li>
@@ -39,6 +60,11 @@
                     <li>
                         <a class="dropdown-item" asp-controller="AdminProducts" asp-action="Create">
                             Yeni ürün ekle
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="AdminAudit" asp-action="Index">
+                            Audit kayıtları
                         </a>
                     </li>
                 }

@@ -80,7 +80,14 @@ body {
 .admin-product-thumb { width: 3.75rem; height: 3.75rem; object-fit: contain; border: 1px solid #e2e8f0; border-radius: .65rem; background: #fff; }
 .admin-product-thumb-empty { display: grid; place-items: center; color: #94a3b8; }
 .admin-existing-images { display: flex; flex-wrap: wrap; gap: .75rem; }
+.admin-existing-images a { display: block; border-radius: .75rem; transition: transform .15s ease, box-shadow .15s ease; }
+.admin-existing-images a:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1.25rem rgba(15, 23, 42, .14); }
 .admin-existing-images img { width: 6rem; height: 6rem; object-fit: contain; border: 1px solid #dbe2ea; border-radius: .75rem; background: #fff; }
+.order-card { border-radius: 1rem; }
+.order-summary-card { top: 1.5rem; }
+.order-qr-image { width: min(100%, 18rem); height: auto; image-rendering: crisp-edges; }
+.audit-table th, .audit-table td { padding: .75rem; vertical-align: top; }
+.audit-details { max-width: 28rem; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .75rem; }
 
 @media (max-width: 767.98px) {
   .product-gallery { grid-template-columns: 1fr; }

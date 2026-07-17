@@ -292,6 +292,16 @@ public sealed class ProductApiService : IProductApiService
             "Yönetim ürün bilgisi alınamadı.",
             cancellationToken);
 
+    public Task<ApiResponse<ProductResponse>> GetManagementProductBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken = default) =>
+        GetProductResponseAsync(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                $"api/products/management/by-sku/{Uri.EscapeDataString(sku.Trim())}"),
+            "Yönetim ürün bilgisi alınamadı.",
+            cancellationToken);
+
     public Task<ApiResponse<ProductResponse>> UpdateProductAsync(
         Guid id,
         UpdateProductRequest request,

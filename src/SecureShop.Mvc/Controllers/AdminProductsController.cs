@@ -71,7 +71,7 @@ public sealed class AdminProductsController : Controller
 
         var storageResult = await _imageStorage.SaveAsync(
             model.Images,
-            model.Sku,
+            model.Sku.Trim().ToUpperInvariant(),
             model.Name,
             cancellationToken);
 
@@ -127,13 +127,13 @@ public sealed class AdminProductsController : Controller
             });
     }
 
-    [HttpGet("{id:guid}/edit")]
+    [HttpGet("{sku}/edit")]
     public async Task<IActionResult> Edit(
-        Guid id,
+        string sku,
         CancellationToken cancellationToken)
     {
         var result = await _productApiService
-            .GetManagementProductAsync(id, cancellationToken);
+            .GetManagementProductBySkuAsync(sku, cancellationToken);
 
         if (!result.IsSuccess || result.Data is null)
         {
@@ -162,22 +162,95 @@ public sealed class AdminProductsController : Controller
         return View(model);
     }
 
-    [HttpPost("{id:guid}/edit")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(
+    [HttpGet("{id:guid}/edit")]
+    public async Task<IActionResult> EditById(
         Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService
+            .GetManagementProductAsync(id, cancellationToken);
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            TempData["ErrorMessage"] =
+                result.ErrorMessage ?? "Ürün bulunamadı.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(
+            nameof(Edit),
+            new
+            {
+                sku = result.Data.Sku
+            });
+    }
+
+    [HttpPost("{sku}/edit")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(55 * 1024 * 1024)]
+    public async Task<IActionResult> Edit(
+        string sku,
         EditProductViewModel model,
         CancellationToken cancellationToken)
     {
-        if (id != model.Id)
+        var currentResult = await _productApiService
+            .GetManagementProductBySkuAsync(sku, cancellationToken);
+
+        if (!currentResult.IsSuccess || currentResult.Data is null)
+        {
+            TempData["ErrorMessage"] =
+                currentResult.ErrorMessage ?? "Ürün bulunamadı.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        var currentProduct = currentResult.Data;
+
+        if (currentProduct.Id != model.Id)
         {
             return BadRequest();
+        }
+
+        model.Images = currentProduct.Images;
+
+        if (currentProduct.Images.Count + model.NewImages.Count
+            > MaximumImageCount)
+        {
+            ModelState.AddModelError(
+                nameof(model.NewImages),
+                $"Bir üründe en fazla {MaximumImageCount} fotoğraf olabilir.");
         }
 
         if (!ModelState.IsValid)
         {
             await LoadCategoriesAsync(model, cancellationToken);
             return View(model);
+        }
+
+        IReadOnlyList<CreateProductImageRequest> newImages = [];
+
+        if (model.NewImages.Count > 0)
+        {
+            var storageResult = await _imageStorage.SaveAdditionalAsync(
+                model.NewImages,
+                model.Sku.Trim().ToUpperInvariant(),
+                model.Name,
+                currentProduct.Images.Count,
+                cancellationToken);
+
+            if (!storageResult.Succeeded)
+            {
+                ModelState.AddModelError(
+                    nameof(model.NewImages),
+                    storageResult.ErrorMessage
+                        ?? "Yeni ürün fotoğrafları kaydedilemedi.");
+
+                await LoadCategoriesAsync(model, cancellationToken);
+                return View(model);
+            }
+
+            newImages = storageResult.Images;
         }
 
         var request = new UpdateProductRequest(
@@ -189,15 +262,23 @@ public sealed class AdminProductsController : Controller
                 : model.Description.Trim(),
             model.Price,
             model.StockQuantity,
-            model.RowVersion);
+            model.RowVersion,
+            newImages);
 
         var result = await _productApiService.UpdateProductAsync(
-            id,
+            model.Id,
             request,
             cancellationToken);
 
         if (!result.IsSuccess || result.Data is null)
         {
+            if (newImages.Count > 0)
+            {
+                await _imageStorage.DeleteFilesAsync(
+                    newImages,
+                    cancellationToken);
+            }
+
             ModelState.AddModelError(
                 string.Empty,
                 result.ErrorMessage ?? "Ürün güncellenemedi.");
@@ -206,9 +287,16 @@ public sealed class AdminProductsController : Controller
             return View(model);
         }
 
-        TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
+        TempData["SuccessMessage"] = newImages.Count > 0
+            ? "Ürün ve yeni fotoğrafları başarıyla güncellendi."
+            : "Ürün başarıyla güncellendi.";
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(
+            nameof(Edit),
+            new
+            {
+                sku = result.Data.Sku
+            });
     }
 
     [HttpPost("{id:guid}/status")]

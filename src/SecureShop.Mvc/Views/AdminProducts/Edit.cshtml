@@ -15,7 +15,20 @@
                     <a asp-action="Index" class="btn btn-outline-secondary">Listeye dön</a>
                 </div>
 
-                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                @if (TempData["SuccessMessage"] is string successMessage)
+                {
+                    <div class="alert alert-success" role="status">@successMessage</div>
+                }
+
+                @if (TempData["ErrorMessage"] is string operationError)
+                {
+                    <div class="alert alert-danger" role="alert">@operationError</div>
+                }
+
+                <form asp-action="Edit"
+                      asp-route-sku="@Model.Sku"
+                      method="post"
+                      enctype="multipart/form-data">
                     <input asp-for="Id" type="hidden" />
                     <input asp-for="RowVersion" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
@@ -68,14 +81,47 @@
                             <div class="admin-existing-images">
                                 @foreach (var image in Model.Images.OrderBy(item => item.SortOrder))
                                 {
-                                    <img src="@image.ImageUrl" alt="@image.AltText" />
+                                    <a href="@image.ImageUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       title="Görseli yeni sekmede aç">
+                                        <img src="@image.ImageUrl" alt="@image.AltText" />
+                                    </a>
                                 }
                             </div>
                         </div>
                     }
 
+                    @if (Model.Images.Count < 10)
+                    {
+                        <div class="mt-4">
+                            <label asp-for="NewImages" class="form-label fw-semibold"></label>
+                            <div class="product-upload-zone">
+                                <input asp-for="NewImages"
+                                       type="file"
+                                       class="form-control"
+                                       accept="image/png,image/jpeg,image/webp"
+                                       multiple
+                                       data-product-image-input />
+                                <div class="form-text mt-2">
+                                    En fazla @(10 - Model.Images.Count) yeni fotoğraf ekleyebilirsiniz.
+                                    PNG, JPEG veya WebP; fotoğraf başına en fazla 5 MB.
+                                </div>
+                                <div class="product-upload-preview mt-3"
+                                     data-product-image-preview></div>
+                            </div>
+                            <span asp-validation-for="NewImages" class="text-danger"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary mt-4 mb-0">
+                            Bu ürün 10 fotoğraflık üst sınıra ulaştı.
+                        </div>
+                    }
+
                     <button type="submit" class="btn btn-primary px-4 mt-4">
-                        Değişiklikleri kaydet
+                        Değişiklikleri ve fotoğrafları kaydet
                     </button>
                 </form>
             </div>

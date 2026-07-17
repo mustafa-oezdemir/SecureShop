@@ -4,16 +4,21 @@ using SecureShop.Api.Contracts.Requests;
 using SecureShop.Api.Contracts.Responses;
 using SecureShop.Api.Data;
 using SecureShop.Api.Domain.Entities;
+using SecureShop.Api.Features.Audit;
 
 namespace SecureShop.Api.Features.Products;
 
 public sealed class ProductService : IProductService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IAuditService _audit;
 
-    public ProductService(AppDbContext dbContext)
+    public ProductService(
+        AppDbContext dbContext,
+        IAuditService audit)
     {
         _dbContext = dbContext;
+        _audit = audit;
     }
 
     public Task<IReadOnlyList<ProductResponse>> GetPublicAsync(
@@ -90,6 +95,16 @@ public sealed class ProductService : IProductService
         }
 
         _dbContext.Products.Add(product);
+        _audit.Record(
+            "Product.Created",
+            nameof(Product),
+            product.Id.ToString("D"),
+            new
+            {
+                product.Sku,
+                product.Name,
+                ImageCount = request.Images.Count
+            });
 
         try
         {
@@ -163,6 +178,17 @@ public sealed class ProductService : IProductService
                 isPrimary: product.Images.Count == 0 && index == 0);
         }
 
+        _audit.Record(
+            "Product.Updated",
+            nameof(Product),
+            product.Id.ToString("D"),
+            new
+            {
+                product.Sku,
+                product.Name,
+                AddedImageCount = request.Images.Count
+            });
+
         return await SaveMutationAsync(product, cancellationToken);
     }
 
@@ -194,6 +220,17 @@ public sealed class ProductService : IProductService
         {
             product.Deactivate();
         }
+
+        _audit.Record(
+            request.IsActive
+                ? "Product.Activated"
+                : "Product.Deactivated",
+            nameof(Product),
+            product.Id.ToString("D"),
+            new
+            {
+                product.Sku
+            });
 
         return await SaveMutationAsync(product, cancellationToken);
     }

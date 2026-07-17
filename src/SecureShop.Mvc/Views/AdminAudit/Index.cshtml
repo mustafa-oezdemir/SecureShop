@@ -1,0 +1,46 @@
+@model IReadOnlyList<SecureShop.Mvc.Models.Responses.AuditLogResponse>
+@{
+    ViewData["Title"] = "Audit kayıtları";
+}
+
+<div class="mb-4">
+    <span class="text-uppercase text-primary fw-semibold small">Admin güvenlik</span>
+    <h1 class="mb-0">Audit kayıtları</h1>
+</div>
+
+@if (ViewData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 audit-table">
+                <thead>
+                    <tr>
+                        <th>Zaman</th>
+                        <th>İşlem</th>
+                        <th>Varlık</th>
+                        <th>Kullanıcı</th>
+                        <th>IP</th>
+                        <th>Detay</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@log.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                            <td><code>@log.Action</code></td>
+                            <td>@log.EntityType<br /><small>@log.EntityId</small></td>
+                            <td><small>@log.UserId</small></td>
+                            <td>@log.IpAddress</td>
+                            <td><pre class="audit-details">@log.DetailsJson</pre></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
