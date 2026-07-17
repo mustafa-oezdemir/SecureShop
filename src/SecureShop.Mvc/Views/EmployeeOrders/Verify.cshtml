@@ -1,34 +1,103 @@
 @model SecureShop.Mvc.Models.ViewModels.QrVerificationViewModel
 @{
     ViewData["Title"] = "Sipariş QR doğrulama";
+    var hasToken = !string.IsNullOrWhiteSpace(Model.Token);
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm qr-verification-card">
             <div class="card-body p-4 p-lg-5">
-                <span class="text-uppercase text-primary fw-semibold small">Güvenli teslim</span>
-                <h1 class="mt-2">QR kod doğrula</h1>
-                <p class="text-body-secondary">
-                    QR bağlantısından gelen token otomatik dolar. Gerekirse token'ı elle yapıştırın.
-                </p>
+                <span class="text-uppercase text-primary fw-semibold small">
+                    Güvenli teslim
+                </span>
+                <h1 class="mt-2">QR teslim doğrulaması</h1>
+
                 @if (TempData["SuccessMessage"] is string successMessage)
                 {
                     <div class="alert alert-success">@successMessage</div>
                 }
-                <form asp-action="Verify" method="post">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-                    <label asp-for="Token" class="form-label"></label>
-                    <textarea asp-for="Token" class="form-control" rows="5"></textarea>
-                    <span asp-validation-for="Token" class="text-danger"></span>
-                    <button class="btn btn-primary mt-3" type="submit">
-                        Doğrula ve teslimi tamamla
-                    </button>
-                </form>
+
                 @if (Model.Order is not null)
                 {
-                    <div class="alert alert-success mt-4 mb-0">
-                        <strong>@Model.Order.OrderNumber</strong> teslim edildi.
+                    <div class="qr-verification-success text-center py-4">
+                        <div class="display-5 mb-3" aria-hidden="true">✓</div>
+                        <h2 class="h4">@Model.Order.OrderNumber</h2>
+                        <p class="text-success mb-0">
+                            Sipariş teslim edildi olarak tamamlandı.
+                        </p>
+                    </div>
+                }
+                else if (hasToken)
+                {
+                    <p class="text-body-secondary">
+                        QR bağlantısı doğrulama için hazır. Teslim alan müşteriyi
+                        kontrol ettikten sonra işlemi onaylayın.
+                    </p>
+                    <form asp-action="Verify" method="post">
+                        <div asp-validation-summary="ModelOnly"
+                             class="alert alert-danger"></div>
+                        <input asp-for="Token" type="hidden" />
+                        <button class="btn btn-primary btn-lg w-100 mt-3"
+                                type="submit">
+                            Teslimi doğrula ve siparişi tamamla
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="qr-scanner" data-qr-scanner>
+                        <p class="text-body-secondary">
+                            Telefon kamerasını açıp müşterinin sipariş detayında
+                            gösterilen QR koduna yöneltin.
+                        </p>
+
+                        <div class="qr-scanner-status alert alert-info"
+                             data-qr-scanner-status
+                             role="status"
+                             aria-live="polite">
+                            Kamera henüz başlatılmadı.
+                        </div>
+
+                        <div class="qr-scanner-stage d-none"
+                             data-qr-scanner-stage>
+                            <video data-qr-scanner-video
+                                   playsinline
+                                   muted
+                                   aria-label="QR tarama kamerası"></video>
+                            <div class="qr-scanner-frame"
+                                 aria-hidden="true"></div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    data-qr-scanner-start>
+                                Kamerayı aç
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-secondary d-none"
+                                    data-qr-scanner-stop>
+                                Kamerayı kapat
+                            </button>
+                        </div>
+
+                        <div class="qr-scanner-upload mt-4">
+                            <label for="qr-image-upload"
+                                   class="form-label fw-semibold">
+                                Alternatif: QR fotoğrafı seç
+                            </label>
+                            <input id="qr-image-upload"
+                                   type="file"
+                                   accept="image/*"
+                                   capture="environment"
+                                   class="form-control"
+                                   data-qr-scanner-upload />
+                            <div class="form-text">
+                                Kamera açılmazsa QR kodunun fotoğrafını çekip
+                                buradan seçebilirsiniz.
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
@@ -38,4 +107,9 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @if (!hasToken && Model.Order is null)
+    {
+        <script src="~/js/qr-scanner.js"
+                asp-append-version="true"></script>
+    }
 }

@@ -19,9 +19,12 @@ using SecureShop.Api.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotEnvConfiguration.AddMissingFromDotEnv(
-    builder.Configuration,
-    builder.Environment.ContentRootPath);
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    DotEnvConfiguration.AddMissingFromDotEnv(
+        builder.Configuration,
+        builder.Environment.ContentRootPath);
+}
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
@@ -64,6 +67,15 @@ builder.Services
     .Validate(
         options => options.LifetimeMinutes is >= 5 and <= 525_600,
         "QR token süresi 5 ile 525600 dakika arasında olmalıdır.")
+    .Validate(
+        options =>
+            builder.Environment.IsDevelopment()
+            || !Uri.TryCreate(
+                options.VerificationBaseUrl,
+                UriKind.Absolute,
+                out var uri)
+            || !uri.IsLoopback,
+        "Production ortamında QR doğrulama adresi localhost olamaz.")
     .ValidateOnStart();
 
 builder.Services.AddAuthorization(options =>

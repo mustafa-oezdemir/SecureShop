@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Erişim reddedildi";
+    var returnUrl = ViewData["ReturnUrl"] as string;
 }
 
 <section class="card border-0 shadow-sm mx-auto" style="max-width: 42rem;">
@@ -7,10 +8,28 @@
         <div class="display-5 mb-3" aria-hidden="true">🔒</div>
         <h1 class="h3">Bu sayfaya erişim yetkiniz yok</h1>
         <p class="text-body-secondary">
-            Sepet işlemleri yalnızca müşteri hesaplarına açıktır.
+            Bu işlem hesabınızdaki role açık değil. QR teslim doğrulaması için
+            Employee veya Admin hesabı gerekir.
         </p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-            Ana sayfaya dön
-        </a>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Ana sayfaya dön
+            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Account"
+                      asp-action="SwitchAccount"
+                      method="post">
+                    <input type="hidden"
+                           name="returnUrl"
+                           value="@returnUrl" />
+                    <button class="btn btn-primary" type="submit">
+                        Farklı hesapla giriş yap
+                    </button>
+                </form>
+            }
+        </div>
     </div>
 </section>

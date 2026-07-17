@@ -19,11 +19,21 @@ public sealed class AccountController : Controller
 
     [AllowAnonymous]
     [HttpGet("login")]
-    public IActionResult Login()
+    public IActionResult Login([FromQuery] string? returnUrl)
     {
-        return User.Identity?.IsAuthenticated == true
-            ? RedirectToAction(nameof(Session))
-            : View(new LoginViewModel());
+        var safeReturnUrl = GetSafeReturnUrl(returnUrl);
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return safeReturnUrl is null
+                ? RedirectToAction(nameof(Session))
+                : LocalRedirect(safeReturnUrl);
+        }
+
+        return View(new LoginViewModel
+        {
+            ReturnUrl = safeReturnUrl
+        });
     }
 
     [AllowAnonymous]
@@ -56,7 +66,11 @@ public sealed class AccountController : Controller
 
         Response.Headers.Append("Set-Cookie",result.AuthenticationCookie);
 
-        return RedirectToAction(nameof(Session));
+        var safeReturnUrl = GetSafeReturnUrl(model.ReturnUrl);
+
+        return safeReturnUrl is null
+            ? RedirectToAction(nameof(Session))
+            : LocalRedirect(safeReturnUrl);
     }
 
     [AllowAnonymous]
@@ -82,9 +96,27 @@ public sealed class AccountController : Controller
 
     [AllowAnonymous]
     [HttpGet("forbidden")]
-    public IActionResult Forbidden()
+    public IActionResult Forbidden([FromQuery] string? returnUrl)
     {
+        ViewData["ReturnUrl"] = GetSafeReturnUrl(returnUrl);
         return View();
+    }
+
+    [Authorize]
+    [HttpPost("switch-account")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SwitchAccount(
+        string? returnUrl)
+    {
+        await HttpContext.SignOutAsync(
+            SharedCookieAuthenticationDefaults.AuthenticationScheme);
+
+        return RedirectToAction(
+            nameof(Login),
+            new
+            {
+                returnUrl = GetSafeReturnUrl(returnUrl)
+            });
     }
 
     [Authorize]
@@ -97,4 +129,10 @@ public sealed class AccountController : Controller
 
         return RedirectToAction(nameof(Session));
     }
+
+    private string? GetSafeReturnUrl(string? returnUrl) =>
+        !string.IsNullOrWhiteSpace(returnUrl)
+        && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
 }

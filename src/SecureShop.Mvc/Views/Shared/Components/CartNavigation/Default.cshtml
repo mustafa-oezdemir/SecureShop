@@ -1,0 +1,14 @@
+@model SecureShop.Mvc.Models.ViewModels.CartNavigationViewModel
+
+<li class="nav-item">
+    <a class="nav-link nav-cart-link"
+       asp-controller="Cart"
+       asp-action="Index"
+       aria-label="Sepetim, @Model.TotalQuantity ürün">
+        <span class="nav-cart-icon" aria-hidden="true">🛒</span>
+        <span>Sepetim</span>
+        <span class="nav-cart-count"
+              data-cart-nav-count
+              aria-live="polite">@Model.TotalQuantity</span>
+    </a>
+</li>

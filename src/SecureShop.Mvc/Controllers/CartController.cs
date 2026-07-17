@@ -66,6 +66,14 @@ public sealed class CartController : Controller
     {
         if (!ModelState.IsValid)
         {
+            if (WantsJsonResponse())
+            {
+                return BadRequest(new
+                {
+                    error = "Adet 1 ile 99 arasında olmalıdır."
+                });
+            }
+
             TempData["ErrorMessage"] =
                 "Adet 1 ile 99 arasında olmalıdır.";
 
@@ -76,6 +84,22 @@ public sealed class CartController : Controller
             itemId,
             request,
             cancellationToken);
+
+        if (WantsJsonResponse())
+        {
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return Ok(result.Data);
+            }
+
+            return StatusCode(
+                (int)result.StatusCode,
+                new
+                {
+                    error = result.ErrorMessage
+                        ?? "Sepet miktarı güncellenemedi."
+                });
+        }
 
         SetResultMessage(
             result.IsSuccess,
@@ -129,4 +153,14 @@ public sealed class CartController : Controller
                 ? successMessage
                 : errorMessage ?? "Sepet işlemi tamamlanamadı.";
     }
+
+    private bool WantsJsonResponse() =>
+        Request.Headers.Accept.Any(value =>
+            value?.Contains(
+                "application/json",
+                StringComparison.OrdinalIgnoreCase) == true)
+        || string.Equals(
+            Request.Headers.XRequestedWith,
+            "XMLHttpRequest",
+            StringComparison.OrdinalIgnoreCase);
 }

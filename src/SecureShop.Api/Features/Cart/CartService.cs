@@ -190,6 +190,9 @@ public sealed class CartService : ICartService
             .Include(cart => cart.Items)
                 .ThenInclude(item => item.Product)
                     .ThenInclude(product => product.Category)
+            .Include(cart => cart.Items)
+                .ThenInclude(item => item.Product)
+                    .ThenInclude(product => product.Images)
             .AsSplitQuery();
 
         if (!tracking)
@@ -235,6 +238,12 @@ public sealed class CartService : ICartService
             .OrderBy(item => item.Product.Name)
             .Select(item =>
             {
+                var image = item.Product.Images
+                    .OrderByDescending(currentImage =>
+                        currentImage.IsPrimary)
+                    .ThenBy(currentImage =>
+                        currentImage.SortOrder)
+                    .FirstOrDefault();
                 var lineTotal = decimal.Round(
                     item.Product.Price * item.Quantity,
                     2,
@@ -245,6 +254,8 @@ public sealed class CartService : ICartService
                     item.ProductId,
                     item.Product.Name,
                     item.Product.Sku,
+                    image?.ImageUrl,
+                    image?.AltText ?? item.Product.Name,
                     item.Product.Price,
                     item.Quantity,
                     lineTotal,

@@ -28,8 +28,14 @@ public sealed class SecureShopApiFactory
             "Authentication:SharedCookie:KeyRingPath",
             _keyRingPath);
         builder.UseSetting(
+            "Authentication:Google:ClientId",
+            "integration-test-client");
+        builder.UseSetting(
+            "Authentication:Google:ClientSecret",
+            "integration-test-secret");
+        builder.UseSetting(
             "QrCodes:Orders:VerificationBaseUrl",
-            "https://localhost/employee/orders/verify");
+            "https://phone.secureshop.test/employee/orders/verify");
         builder.UseSetting(
             "QrCodes:Orders:LifetimeMinutes",
             "30");
@@ -48,7 +54,7 @@ public sealed class SecureShopApiFactory
                     ["Authentication:SharedCookie:KeyRingPath"] =
                         _keyRingPath,
                     ["QrCodes:Orders:VerificationBaseUrl"] =
-                        "https://localhost/employee/orders/verify",
+                        "https://phone.secureshop.test/employee/orders/verify",
                     ["QrCodes:Orders:LifetimeMinutes"] = "30"
                 });
         });

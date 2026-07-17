@@ -30,7 +30,7 @@ public static class DotEnvConfiguration
                 continue;
             }
 
-            if (!string.IsNullOrWhiteSpace(configuration[key]))
+            if (HasProcessEnvironmentValue(key))
             {
                 continue;
             }
@@ -44,13 +44,27 @@ public static class DotEnvConfiguration
         }
     }
 
+    private static bool HasProcessEnvironmentValue(string key)
+    {
+        var environmentKey = key.Replace(
+            ":",
+            "__",
+            StringComparison.Ordinal);
+
+        return !string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(
+                    environmentKey))
+            || !string.IsNullOrWhiteSpace(
+                Environment.GetEnvironmentVariable(key));
+    }
+
     private static string? FindDotEnvPath(
         string contentRootPath)
     {
         var startDirectories = new[]
         {
-            Directory.GetCurrentDirectory(),
             contentRootPath,
+            Directory.GetCurrentDirectory(),
             AppContext.BaseDirectory
         };
 

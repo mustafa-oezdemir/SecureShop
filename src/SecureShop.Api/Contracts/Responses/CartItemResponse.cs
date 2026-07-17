@@ -5,6 +5,8 @@ public sealed record CartItemResponse(
     Guid ProductId,
     string ProductName,
     string Sku,
+    string? ImageUrl,
+    string ImageAltText,
     decimal UnitPrice,
     int Quantity,
     decimal LineTotal,

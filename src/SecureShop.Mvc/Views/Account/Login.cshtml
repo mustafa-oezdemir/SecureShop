@@ -1,9 +1,56 @@
 @model SecureShop.Mvc.Models.ViewModels.LoginViewModel
-@{ ViewData["Title"]="Giriş"; }
-<div class="row justify-content-center"><div class="col-md-5"><h1>Yerel Giriş</h1>
-<form asp-action="Login" method="post">
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-<div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" autocomplete="username"/><span asp-validation-for="Email" class="text-danger"></span></div>
-<div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" autocomplete="current-password"/><span asp-validation-for="Password" class="text-danger"></span></div>
-<button class="btn btn-primary" type="submit">Giriş yap</button></form></div></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@{
+    ViewData["Title"] = "Giriş";
+    var continuesToProtectedPage =
+        !string.IsNullOrWhiteSpace(Model.ReturnUrl);
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="card border-0 shadow-sm login-card">
+            <div class="card-body p-4 p-lg-5">
+                <span class="text-uppercase text-primary fw-semibold small">
+                    Güvenli oturum
+                </span>
+                <h1 class="h2 mt-2">Giriş yap</h1>
+                @if (continuesToProtectedPage)
+                {
+                    <div class="alert alert-info mt-3" role="status">
+                        QR doğrulamasına devam etmek için Employee veya Admin
+                        hesabıyla giriş yapın.
+                    </div>
+                }
+                <form asp-action="Login" method="post" class="mt-4">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <input type="hidden"
+                           name="ReturnUrl"
+                           value="@Model.ReturnUrl" />
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email"
+                               class="form-control form-control-lg"
+                               autocomplete="username"
+                               autofocus />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password"
+                               class="form-control form-control-lg"
+                               autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <button class="btn btn-primary btn-lg w-100" type="submit">
+                        @(continuesToProtectedPage
+                            ? "Giriş yap ve QR doğrulamaya devam et"
+                            : "Giriş yap")
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -4,138 +4,209 @@
     var cart = Model.Cart;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <span class="text-uppercase text-primary fw-semibold small">Secure checkout</span>
-        <h1 class="mb-0">Sepetim</h1>
-    </div>
-    <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">
-        Alışverişe devam et
-    </a>
-</div>
-
-@if (TempData["SuccessMessage"] is string successMessage)
-{
-    <div class="alert alert-success" role="status">@successMessage</div>
-}
-
-@if (TempData["ErrorMessage"] is string operationError)
-{
-    <div class="alert alert-danger" role="alert">@operationError</div>
-}
-
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-{
-    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
-}
-else if (cart is null || cart.Items.Count == 0)
-{
-    <section class="card border-0 shadow-sm cart-empty-state">
-        <div class="card-body text-center p-5">
-            <div class="cart-empty-icon" aria-hidden="true">🛒</div>
-            <h2 class="h4 mt-3">Sepetiniz henüz boş</h2>
-            <p class="text-body-secondary">Ürün kataloğundan ilk ürününüzü ekleyin.</p>
-            <a asp-controller="Products" asp-action="Index" class="btn btn-primary">
-                Ürünleri keşfet
-            </a>
-        </div>
-    </section>
-}
-else
-{
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="vstack gap-3">
-                @foreach (var item in cart.Items)
+<div class="cart-page" data-cart-page>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="text-uppercase text-primary fw-semibold small">Secure checkout</span>
+            <div class="d-flex align-items-center gap-3 mt-1">
+                <h1 class="mb-0">Sepetim</h1>
+                @if (cart is not null && cart.Items.Count > 0)
                 {
-                    <article class="card border-0 shadow-sm cart-item-card">
-                        <div class="card-body p-4">
-                            <div class="row align-items-center g-3">
-                                <div class="col-md">
-                                    <a asp-controller="Products"
-                                       asp-action="Details"
-                                       asp-route-sku="@item.Sku"
-                                       class="h5 text-decoration-none text-dark">
-                                        @item.ProductName
-                                    </a>
-                                    <div class="text-body-secondary small">SKU: @item.Sku</div>
-                                    <div class="fw-semibold mt-2">@item.UnitPrice.ToString("N2") € / adet</div>
-
-                                    @if (!item.IsAvailable)
-                                    {
-                                        <div class="text-danger small mt-2">
-                                            Bu ürün şu anda satışa uygun değil.
-                                        </div>
-                                    }
-                                </div>
-                                <div class="col-md-auto">
-                                    <form asp-action="Update"
-                                          asp-route-itemId="@item.Id"
-                                          method="post"
-                                          class="d-flex align-items-end gap-2">
-                                        <div>
-                                            <label for="quantity-@item.Id" class="form-label small">Adet</label>
-                                            <input id="quantity-@item.Id"
-                                                   name="Quantity"
-                                                   type="number"
-                                                   min="1"
-                                                   max="@Math.Min(item.AvailableStock, 99)"
-                                                   value="@item.Quantity"
-                                                   class="form-control cart-quantity-input"
-                                                   disabled="@(!item.IsAvailable)" />
-                                        </div>
-                                        <button type="submit"
-                                                class="btn btn-outline-primary"
-                                                disabled="@(!item.IsAvailable)">
-                                            Güncelle
-                                        </button>
-                                    </form>
-                                </div>
-                                <div class="col-md-auto text-md-end">
-                                    <div class="small text-body-secondary">Ara toplam</div>
-                                    <div class="h5 mb-2">@item.LineTotal.ToString("N2") €</div>
-                                    <form asp-action="Remove"
-                                          asp-route-itemId="@item.Id"
-                                          method="post">
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">
-                                            Sepetten çıkar
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
+                    <span class="cart-heading-count">
+                        <strong data-cart-heading-quantity>@cart.TotalQuantity</strong> ürün
+                    </span>
                 }
             </div>
         </div>
-
-        <div class="col-lg-4">
-            <aside class="card border-0 shadow-sm cart-summary-card">
-                <div class="card-body p-4">
-                    <h2 class="h4">Sepet özeti</h2>
-                    <div class="d-flex justify-content-between py-3 border-bottom">
-                        <span>Toplam adet</span>
-                        <strong>@cart.TotalQuantity</strong>
-                    </div>
-                    <div class="d-flex justify-content-between py-3">
-                        <span>Toplam</span>
-                        <strong class="h4 mb-0">@cart.TotalAmount.ToString("N2") €</strong>
-                    </div>
-                    <p class="small text-body-secondary">
-                        Nihai fiyat ve stok sipariş oluşturulurken API tarafından tekrar doğrulanacaktır.
-                    </p>
-                    <a asp-controller="Orders"
-                       asp-action="Checkout"
-                       class="btn btn-primary w-100">
-                        Siparişi tamamla
-                    </a>
-                    <form asp-action="Clear" method="post" class="mt-3 text-center">
-                        <button type="submit" class="btn btn-link text-danger">
-                            Sepeti temizle
-                        </button>
-                    </form>
-                </div>
-            </aside>
-        </div>
+        <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">
+            Alışverişe devam et
+        </a>
     </div>
+
+    <div class="cart-live-status visually-hidden"
+         data-cart-live-status
+         role="status"
+         aria-live="polite"></div>
+
+    <div class="alert alert-danger d-none"
+         data-cart-error
+         role="alert"></div>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success" role="status">@successMessage</div>
+    }
+
+    @if (TempData["ErrorMessage"] is string operationError)
+    {
+        <div class="alert alert-danger" role="alert">@operationError</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
+    else if (cart is null || cart.Items.Count == 0)
+    {
+        <section class="card border-0 shadow-sm cart-empty-state">
+            <div class="card-body text-center p-5">
+                <div class="cart-empty-icon" aria-hidden="true">🛒</div>
+                <h2 class="h4 mt-3">Sepetiniz henüz boş</h2>
+                <p class="text-body-secondary">Ürün kataloğundan ilk ürününüzü ekleyin.</p>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-primary">
+                    Ürünleri keşfet
+                </a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-8">
+                <div class="cart-list-header mb-3">
+                    <span>@cart.Items.Count farklı ürün</span>
+                    <span>Fiyat</span>
+                </div>
+
+                <div class="vstack gap-3">
+                    @foreach (var item in cart.Items)
+                    {
+                        <article class="card border-0 shadow-sm cart-item-card"
+                                 data-cart-item
+                                 data-item-id="@item.Id">
+                            <div class="card-body p-3 p-md-4">
+                                <div class="cart-item-grid">
+                                    <a asp-controller="Products"
+                                       asp-action="Details"
+                                       asp-route-sku="@item.Sku"
+                                       class="cart-item-image-link">
+                                        @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl"
+                                                 alt="@item.ImageAltText"
+                                                 class="cart-item-image" />
+                                        }
+                                        else
+                                        {
+                                            <span class="cart-item-image-placeholder" aria-hidden="true">📦</span>
+                                        }
+                                    </a>
+
+                                    <div class="cart-item-content">
+                                        <a asp-controller="Products"
+                                           asp-action="Details"
+                                           asp-route-sku="@item.Sku"
+                                           class="cart-item-title">
+                                            @item.ProductName
+                                        </a>
+                                        <div class="text-body-secondary small mt-1">SKU: @item.Sku</div>
+                                        <div class="cart-stock-status @(item.IsAvailable ? "is-available" : "is-unavailable")">
+                                            @(item.IsAvailable
+                                                ? $"Stokta · {item.AvailableStock} adet mevcut"
+                                                : "Bu ürün şu anda satışa uygun değil")
+                                        </div>
+                                        <div class="small text-body-secondary mt-2">
+                                            Birim fiyat:
+                                            <strong class="text-body">@item.UnitPrice.ToString("N2") €</strong>
+                                        </div>
+
+                                        <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
+                                            <form asp-action="Update"
+                                                  asp-route-itemId="@item.Id"
+                                                  method="post"
+                                                  class="cart-quantity-form"
+                                                  data-cart-quantity-form>
+                                                <span class="visually-hidden" id="quantity-label-@item.Id">
+                                                    @item.ProductName adedi
+                                                </span>
+                                                <button type="button"
+                                                        class="cart-quantity-button"
+                                                        data-quantity-decrement
+                                                        aria-label="@item.ProductName adetini azalt"
+                                                        disabled="@(!item.IsAvailable || item.Quantity <= 1)">−</button>
+                                                <input id="quantity-@item.Id"
+                                                       name="Quantity"
+                                                       type="number"
+                                                       inputmode="numeric"
+                                                       min="1"
+                                                       max="@Math.Min(item.AvailableStock, 99)"
+                                                       value="@item.Quantity"
+                                                       data-cart-quantity
+                                                       data-committed-value="@item.Quantity"
+                                                       aria-labelledby="quantity-label-@item.Id"
+                                                       disabled="@(!item.IsAvailable)" />
+                                                <button type="button"
+                                                        class="cart-quantity-button"
+                                                        data-quantity-increment
+                                                        aria-label="@item.ProductName adetini artır"
+                                                        disabled="@(!item.IsAvailable || item.Quantity >= Math.Min(item.AvailableStock, 99))">+</button>
+                                                <span class="cart-quantity-spinner spinner-border spinner-border-sm"
+                                                      data-cart-spinner
+                                                      aria-hidden="true"></span>
+                                            </form>
+
+                                            <form asp-action="Remove"
+                                                  asp-route-itemId="@item.Id"
+                                                  method="post">
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-link text-danger text-decoration-none p-0">
+                                                    Sepetten çıkar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="cart-item-price">
+                                        <span class="small text-body-secondary">Ara toplam</span>
+                                        <strong data-line-total>@item.LineTotal.ToString("N2") €</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <aside class="card border-0 shadow-sm cart-summary-card">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-4">Sipariş özeti</h2>
+                        <div class="d-flex justify-content-between py-2">
+                            <span>Farklı ürün</span>
+                            <strong data-cart-distinct-count>@cart.Items.Count</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span>Toplam ürün adedi</span>
+                            <strong data-cart-total-quantity>@cart.TotalQuantity</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-3">
+                            <span>Ara toplam</span>
+                            <strong data-cart-subtotal>@cart.TotalAmount.ToString("N2") €</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-top cart-grand-total">
+                            <span>Toplam</span>
+                            <strong data-cart-total>@cart.TotalAmount.ToString("N2") €</strong>
+                        </div>
+                        <p class="small text-body-secondary mt-3">
+                            Nihai fiyat ve stok sipariş oluşturulurken API tarafından tekrar doğrulanır.
+                        </p>
+                        <a asp-controller="Orders"
+                           asp-action="Checkout"
+                           class="btn btn-primary btn-lg w-100">
+                            Siparişi tamamla
+                        </a>
+                        <form asp-action="Clear" method="post" class="mt-3 text-center">
+                            <button type="submit" class="btn btn-link text-danger">
+                                Sepeti temizle
+                            </button>
+                        </form>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/cart.js" asp-append-version="true"></script>
 }

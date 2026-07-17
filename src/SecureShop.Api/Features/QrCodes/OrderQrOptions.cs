@@ -7,5 +7,5 @@ public sealed class OrderQrOptions
     public string VerificationBaseUrl { get; set; } =
         "https://localhost:7002/employee/orders/verify";
 
-    public int LifetimeMinutes { get; set; } = 43_200;
+    public int LifetimeMinutes { get; set; } = 15;
 }

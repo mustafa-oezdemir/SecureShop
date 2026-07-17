@@ -212,6 +212,8 @@ app.Use(async (context, next) =>
     context.Response.Headers.XFrameOptions = "DENY";
     context.Response.Headers["Referrer-Policy"] =
         "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] =
+        "camera=(self), microphone=(), geolocation=()";
     context.Response.Headers.ContentSecurityPolicy =
         "default-src 'self'; img-src 'self' data:; " +
         "style-src 'self' 'unsafe-inline'; script-src 'self'; " +
