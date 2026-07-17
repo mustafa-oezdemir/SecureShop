@@ -45,8 +45,8 @@ public sealed class CatalogSeeder
             "4K video, gelişmiş görüntü sabitleme ve su geçirmez gövdeye sahip kompakt aksiyon kamerası.",
             329.90m,
             15,
-            "action-camera",
-            0)
+            "SSH-CAMERA-01",
+            4)
     ];
 
     private readonly AppDbContext _dbContext;
