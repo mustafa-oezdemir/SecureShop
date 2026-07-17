@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using SecureShop.Mvc.Models.Responses;
 
 namespace SecureShop.Mvc.Models.ViewModels;
@@ -43,6 +44,9 @@ public sealed class EditProductViewModel
     public string RowVersion { get; set; } = string.Empty;
 
     public IReadOnlyList<ProductImageResponse> Images { get; set; } = [];
+
+    [Display(Name = "Yeni fotoğraflar")]
+    public IReadOnlyList<IFormFile> NewImages { get; set; } = [];
 
     public IReadOnlyList<CategoryOptionResponse> Categories { get; set; } = [];
 }

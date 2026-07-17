@@ -7,8 +7,10 @@ public interface IProductService
 {
     Task<IReadOnlyList<ProductResponse>> GetPublicAsync(CancellationToken cancellationToken);
     Task<ProductResponse?> GetPublicByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<ProductResponse?> GetPublicBySkuAsync(string sku, CancellationToken cancellationToken);
     Task<IReadOnlyList<ProductResponse>> GetManagementAsync(CancellationToken cancellationToken);
     Task<ProductResponse?> GetManagementByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<ProductResponse?> GetManagementBySkuAsync(string sku, CancellationToken cancellationToken);
     Task<IReadOnlyList<CategoryOptionResponse>> GetCategoryOptionsAsync(CancellationToken cancellationToken);
     Task<ProductMutationResult> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken);
     Task<ProductMutationResult> UpdateAsync(Guid id, UpdateProductRequest request, CancellationToken cancellationToken);

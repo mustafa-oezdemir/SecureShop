@@ -35,6 +35,19 @@ public sealed class ProductsController : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
+    [AllowAnonymous]
+    [HttpGet("by-sku/{sku}")]
+    public async Task<ActionResult<ProductResponse>> GetPublicBySku(
+        string sku,
+        CancellationToken cancellationToken)
+    {
+        var product = await _productService.GetPublicBySkuAsync(
+            sku,
+            cancellationToken);
+
+        return product is null ? NotFound() : Ok(product);
+    }
+
     [HttpGet("management")]
     public async Task<ActionResult<IReadOnlyList<ProductResponse>>> GetManagement(
         CancellationToken cancellationToken) =>
@@ -46,6 +59,18 @@ public sealed class ProductsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var product = await _productService.GetManagementByIdAsync(id, cancellationToken);
+        return product is null ? NotFound() : Ok(product);
+    }
+
+    [HttpGet("management/by-sku/{sku}")]
+    public async Task<ActionResult<ProductResponse>> GetManagementBySku(
+        string sku,
+        CancellationToken cancellationToken)
+    {
+        var product = await _productService.GetManagementBySkuAsync(
+            sku,
+            cancellationToken);
+
         return product is null ? NotFound() : Ok(product);
     }
 
@@ -102,6 +127,7 @@ public sealed class ProductsController : ControllerBase
             ProductMutationStatus.NotFound => NotFound(CreateProblem("Ürün bulunamadı.")),
             ProductMutationStatus.CategoryNotFound => BadRequest(CreateProblem("Aktif kategori bulunamadı.")),
             ProductMutationStatus.DuplicateSku => Conflict(CreateProblem("SKU başka bir ürün tarafından kullanılıyor.")),
+            ProductMutationStatus.TooManyImages => BadRequest(CreateProblem("Bir üründe en fazla 10 fotoğraf olabilir.")),
             ProductMutationStatus.InvalidRowVersion => BadRequest(CreateProblem("RowVersion geçersiz.")),
             ProductMutationStatus.ConcurrencyConflict => Conflict(CreateProblem("Ürün başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.")),
             _ => StatusCode(StatusCodes.Status500InternalServerError)

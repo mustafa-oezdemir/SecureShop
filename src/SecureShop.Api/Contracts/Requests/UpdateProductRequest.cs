@@ -31,4 +31,7 @@ public sealed class UpdateProductRequest
 
     [Required]
     public string RowVersion { get; init; } = string.Empty;
+
+    [MaxLength(10)]
+    public IReadOnlyList<CreateProductImageRequest> Images { get; init; } = [];
 }

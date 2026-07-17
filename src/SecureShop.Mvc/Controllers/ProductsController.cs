@@ -28,10 +28,15 @@ public sealed class ProductsController : Controller
         });
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
+    [HttpGet("{sku}")]
+    public async Task<IActionResult> Details(
+        string sku,
+        CancellationToken cancellationToken)
     {
-        var result = await _productApiService.GetProductAsync(id, cancellationToken);
+        var result = await _productApiService.GetProductBySkuAsync(
+            sku,
+            cancellationToken);
+
         if (result.StatusCode == HttpStatusCode.NotFound)
         {
             return NotFound();
@@ -44,5 +49,33 @@ public sealed class ProductsController : Controller
         }
 
         return View(result.Data);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> DetailsById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _productApiService.GetProductAsync(
+            id,
+            cancellationToken);
+
+        if (result.StatusCode == HttpStatusCode.NotFound)
+        {
+            return NotFound();
+        }
+
+        if (!result.IsSuccess || result.Data is null)
+        {
+            TempData["ErrorMessage"] = result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(
+            nameof(Details),
+            new
+            {
+                sku = result.Data.Sku
+            });
     }
 }

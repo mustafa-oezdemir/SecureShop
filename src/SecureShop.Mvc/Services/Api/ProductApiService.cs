@@ -103,6 +103,72 @@ public sealed class ProductApiService : IProductApiService
         }
     }
 
+    public async Task<ApiResponse<ProductResponse>> GetProductBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var encodedSku = Uri.EscapeDataString(sku.Trim());
+            using var response = await _httpClient.GetAsync(
+                $"api/products/by-sku/{encodedSku}",
+                cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return ApiResponse<ProductResponse>.Failure(
+                    response.StatusCode,
+                    "Ürün bulunamadı.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return ApiResponse<ProductResponse>.Failure(
+                    response.StatusCode,
+                    "Ürün API'den alınamadı.");
+            }
+
+            var product = await response.Content
+                .ReadFromJsonAsync<ProductResponse>(
+                    cancellationToken: cancellationToken);
+
+            return product is null
+                ? ApiResponse<ProductResponse>.Failure(
+                    HttpStatusCode.BadGateway,
+                    "API geçerli bir ürün response'u döndürmedi.")
+                : ApiResponse<ProductResponse>.Success(
+                    response.StatusCode,
+                    product);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "SKU ile ürün detay API isteği tamamlanamadı.");
+
+            return ApiResponse<ProductResponse>.Failure(
+                HttpStatusCode.ServiceUnavailable,
+                "SecureShop API hizmetine ulaşılamıyor.");
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogError(
+                exception,
+                "SKU ile ürün detay API response'u okunamadı.");
+
+            return ApiResponse<ProductResponse>.Failure(
+                HttpStatusCode.BadGateway,
+                "API ürün response formatı geçersiz.");
+        }
+        catch (OperationCanceledException)
+            when (!cancellationToken.IsCancellationRequested)
+        {
+            return ApiResponse<ProductResponse>.Failure(
+                HttpStatusCode.GatewayTimeout,
+                "API isteği zaman aşımına uğradı.");
+        }
+    }
+
     public async Task<ApiResponse<IReadOnlyList<CategoryOptionResponse>>> GetCategoryOptionsAsync(
         CancellationToken cancellationToken = default)
     {

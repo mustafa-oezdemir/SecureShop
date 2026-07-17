@@ -25,6 +25,11 @@ public sealed class ProductService : IProductService
         CancellationToken cancellationToken) =>
         GetByIdAsync(id, activeOnly: true, cancellationToken);
 
+    public Task<ProductResponse?> GetPublicBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken) =>
+        GetBySkuAsync(sku, activeOnly: true, cancellationToken);
+
     public Task<IReadOnlyList<ProductResponse>> GetManagementAsync(
         CancellationToken cancellationToken) =>
         GetListAsync(activeOnly: false, cancellationToken);
@@ -33,6 +38,11 @@ public sealed class ProductService : IProductService
         Guid id,
         CancellationToken cancellationToken) =>
         GetByIdAsync(id, activeOnly: false, cancellationToken);
+
+    public Task<ProductResponse?> GetManagementBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken) =>
+        GetBySkuAsync(sku, activeOnly: false, cancellationToken);
 
     public async Task<IReadOnlyList<CategoryOptionResponse>> GetCategoryOptionsAsync(
         CancellationToken cancellationToken)
@@ -101,6 +111,7 @@ public sealed class ProductService : IProductService
         CancellationToken cancellationToken)
     {
         var product = await _dbContext.Products
+            .Include(item => item.Images)
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
 
         if (product is null)
@@ -118,6 +129,11 @@ public sealed class ProductService : IProductService
             return new(ProductMutationStatus.CategoryNotFound);
         }
 
+        if (product.Images.Count + request.Images.Count > 10)
+        {
+            return new(ProductMutationStatus.TooManyImages);
+        }
+
         var normalizedSku = request.Sku.Trim().ToUpperInvariant();
         if (await SkuExistsAsync(normalizedSku, id, cancellationToken))
         {
@@ -131,6 +147,21 @@ public sealed class ProductService : IProductService
         product.SetDescription(request.Description);
         product.SetPrice(request.Price);
         product.SetStockQuantity(request.StockQuantity);
+
+        var nextSortOrder = product.Images.Count == 0
+            ? 0
+            : product.Images.Max(image => image.SortOrder) + 1;
+
+        for (var index = 0; index < request.Images.Count; index++)
+        {
+            var image = request.Images[index];
+
+            product.AddImage(
+                image.ImageUrl,
+                image.AltText,
+                nextSortOrder + index,
+                isPrimary: product.Images.Count == 0 && index == 0);
+        }
 
         return await SaveMutationAsync(product, cancellationToken);
     }
@@ -201,6 +232,30 @@ public sealed class ProductService : IProductService
             .Include(item => item.Category)
             .Include(item => item.Images)
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+
+        return product is null ? null : Map(product);
+    }
+
+    private async Task<ProductResponse?> GetBySkuAsync(
+        string sku,
+        bool activeOnly,
+        CancellationToken cancellationToken)
+    {
+        var normalizedSku = sku.Trim().ToUpperInvariant();
+        var query = _dbContext.Products.AsNoTracking();
+
+        if (activeOnly)
+        {
+            query = query.Where(product =>
+                product.IsActive && product.Category.IsActive);
+        }
+
+        var product = await query
+            .Include(item => item.Category)
+            .Include(item => item.Images)
+            .SingleOrDefaultAsync(
+                item => item.Sku == normalizedSku,
+                cancellationToken);
 
         return product is null ? null : Map(product);
     }

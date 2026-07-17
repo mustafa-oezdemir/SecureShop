@@ -123,7 +123,7 @@ public sealed class AdminProductsController : Controller
             "Products",
             new
             {
-                id = result.Data.Id
+                sku = result.Data.Sku
             });
     }
 

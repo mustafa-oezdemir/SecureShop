@@ -13,6 +13,10 @@ public interface IProductApiService
         Guid id,
         CancellationToken cancellationToken = default);
 
+    Task<ApiResponse<ProductResponse>> GetProductBySkuAsync(
+        string sku,
+        CancellationToken cancellationToken = default);
+
     Task<ApiResponse<IReadOnlyList<CategoryOptionResponse>>> GetCategoryOptionsAsync(
         CancellationToken cancellationToken = default);
 

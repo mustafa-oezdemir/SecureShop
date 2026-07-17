@@ -8,6 +8,7 @@ public enum ProductMutationStatus
     NotFound,
     CategoryNotFound,
     DuplicateSku,
+    TooManyImages,
     InvalidRowVersion,
     ConcurrencyConflict
 }

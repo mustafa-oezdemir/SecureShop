@@ -7,4 +7,5 @@ public sealed record UpdateProductRequest(
     string? Description,
     decimal Price,
     int StockQuantity,
-    string RowVersion);
+    string RowVersion,
+    IReadOnlyList<CreateProductImageRequest> Images);

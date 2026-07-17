@@ -25,7 +25,7 @@ else
                 <article class="card h-100 border-0 shadow-sm product-card">
                     @if (primaryImage is not null)
                     {
-                        <a asp-action="Details" asp-route-id="@product.Id" class="product-card-image-link">
+                        <a asp-action="Details" asp-route-sku="@product.Sku" class="product-card-image-link">
                             <img src="@primaryImage.ImageUrl"
                                  alt="@primaryImage.AltText"
                                  class="card-img-top product-card-image"
@@ -38,7 +38,7 @@ else
                         <p class="text-muted">SKU: @product.Sku</p>
                         <p class="fw-bold">@product.Price.ToString("N2") €</p>
                         <p>Stok: @product.StockQuantity</p>
-                        <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary">Detay</a>
+                        <a asp-action="Details" asp-route-sku="@product.Sku" class="btn btn-primary">Detay</a>
                     </div>
                 </article>
             </div>
