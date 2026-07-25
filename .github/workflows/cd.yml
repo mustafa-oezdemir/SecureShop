@@ -54,7 +54,7 @@ jobs:
           --output "publish/${{ matrix.application }}"
 
       - name: Upload ${{ matrix.application }} artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.application }}-${{ github.sha }}
           path: publish/${{ matrix.application }}/
@@ -70,13 +70,13 @@ jobs:
 
     steps:
       - name: Download API artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: api-${{ github.sha }}
           path: publish/api
 
       - name: Download MVC artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: mvc-${{ github.sha }}
           path: publish/mvc
@@ -90,9 +90,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" ||
-            gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" ||
+            gh release create "$GITHUB_REF_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --generate-notes \
+              --verify-tag
           gh release upload "$GITHUB_REF_NAME" \
             "SecureShop.Api-${GITHUB_REF_NAME}.tar.gz" \
             "SecureShop.Mvc-${GITHUB_REF_NAME}.tar.gz" \
+            --repo "$GITHUB_REPOSITORY" \
             --clobber
