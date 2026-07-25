@@ -4,28 +4,28 @@
 
 `.github/workflows/ci.yml`:
 
-- `main` dalına açılan pull request'lerde çalışır.
-- `main` dışındaki dallara yapılan push'larda çalışır.
-- Çözümü restore eder, Release modunda derler ve tüm testleri çalıştırır.
-- Test sonuçlarını ve kod kapsamı dosyalarını 14 gün boyunca artifact olarak saklar.
+- Wird bei Pull Requests gegen `main` ausgeführt.
+- Wird bei Pushes auf Branches außerhalb von `main` ausgeführt.
+- Stellt Abhängigkeiten wieder her, baut im Release-Modus und führt alle Tests aus.
+- Speichert Testergebnisse und Coverage-Dateien 14 Tage als Artifact.
 
 ## CD
 
-`.github/workflows/cd.yml`, `main` dalına yapılan push'ta veya elle
-çalıştırıldığında önce CI doğrulamasını yapar. Ardından API ve MVC projelerinin
-çalıştırılabilir yayın paketlerini üretip GitHub Actions artifact'ı olarak 7 gün
-saklar.
+`.github/workflows/cd.yml` startet bei einem Push auf `main` oder manuell und
+führt zuerst die CI-Prüfung aus. Anschließend werden veröffentlichungsfertige
+Pakete für API und MVC erzeugt und sieben Tage als GitHub Actions Artifacts
+gespeichert.
 
-`v` ile başlayan bir Git etiketi gönderildiğinde (örneğin `v1.0.0`) aynı paketler
-otomatik olarak `.tar.gz` arşivlerine dönüştürülür ve GitHub Release'e eklenir.
+Beim Push eines Git-Tags mit dem Präfix `v`, zum Beispiel `v1.0.1`, werden die
+Pakete automatisch als `.tar.gz` archiviert und einem GitHub Release hinzugefügt.
 
-Bu akış için repository secret, variable veya ücretli bir bulut servisi gerekmez.
-GitHub Release işlemi, workflow'a GitHub tarafından otomatik verilen
-`GITHUB_TOKEN` ile yapılır.
+Für diesen Ablauf werden weder Repository Secrets noch Variables oder ein
+kostenpflichtiger Cloud-Dienst benötigt. Der Release-Vorgang verwendet das von
+GitHub automatisch bereitgestellte `GITHUB_TOKEN`.
 
-Örnek sürüm yayınlama:
+Beispiel für eine Veröffentlichung:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag -a v1.0.1 -m "SecureShop v1.0.1"
+git push origin v1.0.1
 ```
