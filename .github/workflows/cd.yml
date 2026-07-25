@@ -1,0 +1,98 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  ci:
+    name: Verify
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish applications
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        include:
+          - application: api
+            project: src/SecureShop.Api/SecureShop.Api.csproj
+          - application: mvc
+            project: src/SecureShop.Mvc/SecureShop.Mvc.csproj
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish ${{ matrix.application }}
+        run: >
+          dotnet publish "${{ matrix.project }}"
+          --configuration Release
+          --output "publish/${{ matrix.application }}"
+
+      - name: Upload ${{ matrix.application }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.application }}-${{ github.sha }}
+          path: publish/${{ matrix.application }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Create GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download API artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-${{ github.sha }}
+          path: publish/api
+
+      - name: Download MVC artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mvc-${{ github.sha }}
+          path: publish/mvc
+
+      - name: Create release archives
+        run: |
+          tar -czf SecureShop.Api-${GITHUB_REF_NAME}.tar.gz -C publish/api .
+          tar -czf SecureShop.Mvc-${GITHUB_REF_NAME}.tar.gz -C publish/mvc .
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" ||
+            gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          gh release upload "$GITHUB_REF_NAME" \
+            "SecureShop.Api-${GITHUB_REF_NAME}.tar.gz" \
+            "SecureShop.Mvc-${GITHUB_REF_NAME}.tar.gz" \
+            --clobber
