@@ -31,7 +31,8 @@ public static class SharedCookieDataProtectionExtensions
         {
             dataProtectionBuilder.ProtectKeysWithDpapi();
         }
-        else if (!environment.IsDevelopment())
+        else if (!environment.IsDevelopment()
+                 && !environment.IsEnvironment("Testing"))
         {
             throw new InvalidOperationException(
                 "Production ortamında ortak Data Protection anahtarları için " +

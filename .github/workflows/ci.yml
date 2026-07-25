@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -42,21 +42,38 @@ jobs:
       - name: Build
         run: dotnet build $SOLUTION_FILE --configuration Release --no-restore
 
-      - name: Run tests
+      - name: Run API unit tests
         run: >
-          dotnet test $SOLUTION_FILE
+          dotnet test tests/SecureShop.Api.UnitTests/SecureShop.Api.UnitTests.csproj
           --configuration Release
           --no-build
           --logger "trx;LogFileName=test-results.trx"
           --collect "XPlat Code Coverage"
-          --results-directory TestResults
+          --results-directory TestResults/api-unit
+
+      - name: Run API integration tests
+        run: >
+          dotnet test tests/SecureShop.Api.IntegrationTests/SecureShop.Api.IntegrationTests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --collect "XPlat Code Coverage"
+          --results-directory TestResults/api-integration
+
+      - name: Run MVC tests
+        run: >
+          dotnet test tests/SecureShop.Mvc.Tests/SecureShop.Mvc.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --collect "XPlat Code Coverage"
+          --results-directory TestResults/mvc
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-results-${{ github.run_id }}-${{ github.run_attempt }}
           path: TestResults/
           if-no-files-found: warn
           retention-days: 14
-
