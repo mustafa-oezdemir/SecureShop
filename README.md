@@ -200,6 +200,9 @@ GitHub Actions akışı:
 4. API ve MVC publish paketlerini artifact olarak üretir.
 5. `v*` tag'lerinde otomatik GitHub Release oluşturur.
 
+Workflow tetikleyicileri ve artifact saklama ayrıntıları için
+[GitHub Actions dokümanını](.github/WORKFLOWS.md) inceleyin.
+
 Yeni sürüm yayınlamak için:
 
 ```bash
